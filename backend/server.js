@@ -1,4 +1,5 @@
-const http = require('node:http');
+import express from 'express';
+import dotenv from 'dotenv';
 
 const hostname = '127.0.0.1';
 const port = 3000;
@@ -13,4 +14,4 @@ server.listen(port, hostname, () => {
   console.log(`Server running at http://${hostname}:${port}/`);
 });
 
-// TEST
+// TEST tri123
