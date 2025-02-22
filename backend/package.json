@@ -2,6 +2,7 @@
   "name": "backend",
   "version": "1.0.0",
   "description": "",
+  "type": "module",
   "main": "app.js",
   "targets": {
     "main": false
@@ -20,6 +21,7 @@
     "bcrypt": "^5.1.1",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.13.0",
     "mongoose": "^8.10.0",
     "morgan": "^1.10.0"

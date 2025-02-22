@@ -1,14 +1,18 @@
-const path = require('path');
-const express = require('express');
-const morgan = require('morgan');
+import path from "path";
+import express from "express";
+import morgan from "morgan";
+import authRoute from "./routes/authRoute.js";
 
 const app = express();
 
-app.use(express.static(path.join(__dirname, 'public')));
-app.use(morgan('dev'));
+app.use(express.json());
+app.use(express.static(path.join(process.cwd(), "public")));
+app.use(morgan("dev"));
 
-app.get('/', (req, res) => {
-  res.send('Hello World!');
+// Routes
+app.use("/api/auth", authRoute);
+app.get("/", (req, res) => {
+  res.send("Hello World!");
 });
 
-module.exports = app;
+export default app;
