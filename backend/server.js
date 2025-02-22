@@ -1,17 +1,18 @@
-import express from 'express';
-import dotenv from 'dotenv';
+const mongoose = require('mongoose');
+const dotenv = require('dotenv');
 
-const hostname = '127.0.0.1';
-const port = 3000;
+dotenv.config({ path: './config.env' });
 
-const server = http.createServer((req, res) => {
-  res.statusCode = 200;
-  res.setHeader('Content-Type', 'text/plain');
-  res.end('Hello, World!\n');
+const app = require('./app');
+
+const DB = process.env.DATABASE.replace(
+  '<PASSWORD>',
+  process.env.DATABASE_PASSWORD
+);
+
+mongoose.connect(DB).then(() => console.log('DB connection is successful!'));
+
+const port = process.env.PORT || 3000;
+const server = app.listen(port, () => {
+  console.log(`App is running on port ${port}...`);
 });
-
-server.listen(port, hostname, () => {
-  console.log(`Server running at http://${hostname}:${port}/`);
-});
-
-// TEST tri123
