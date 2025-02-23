@@ -3,26 +3,19 @@ import {
   createProduct,
   getAllProducts,
   getProductById,
-  updateProduct,
+  addVariationToProduct,
   deleteProduct,
+  updateProduct,
 } from "../controllers/productController.js";
 import { protect, isAdmin } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
-// Lấy tất cả sản phẩm
-router.get("/", getAllProducts);
-
-// Lấy sản phẩm theo ID
-router.get("/:id", getProductById);
-
-// Tạo sản phẩm (Chỉ admin)
 router.post("/", protect, isAdmin, createProduct);
-
-// Cập nhật sản phẩm (Chỉ admin)
+router.get("/", getAllProducts);
+router.get("/:id", getProductById);
 router.put("/:id", protect, isAdmin, updateProduct);
-
-// Xóa sản phẩm (Chỉ admin)
+router.put("/add-variation", protect, isAdmin, addVariationToProduct);
 router.delete("/:id", protect, isAdmin, deleteProduct);
 
 export default router;

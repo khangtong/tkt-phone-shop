@@ -1,86 +1,91 @@
 import Product from "../models/productModel.js";
 
-//create product
+// Tạo một sản phẩm mới
 export const createProduct = async (req, res) => {
   try {
-    const { name, description, image, category, variation } = req.body;
-
-    const newProduct = new Product({
-      name,
-      description,
-      image,
-      category,
-      variation,
-    });
-
+    const newProduct = new Product(req.body);
     const savedProduct = await newProduct.save();
     res.status(201).json(savedProduct);
   } catch (error) {
-    res.status(500).json({ message: "Server error", error });
+    res.status(500).json({ message: error.message });
   }
 };
 
-//get all product
+// Lấy danh sách sản phẩm
 export const getAllProducts = async (req, res) => {
   try {
     const products = await Product.find()
-      .populate("category")
+      // .populate("category")
       .populate("variation");
     res.status(200).json(products);
   } catch (error) {
-    res.status(500).json({ message: "Server error", error });
+    res.status(500).json({ message: error.message });
   }
 };
 
-//Get product by id
+// Lấy sản phẩm theo ID
 export const getProductById = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id)
-      .populate("category")
+      // .populate("category")
       .populate("variation");
+    if (!product) return res.status(404).json({ message: "Product not found" });
+    res.status(200).json(product);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Cập nhật sản phẩm
+export const updateProduct = async (req, res) => {
+  try {
+    const { name, description, image, category } = req.body;
+    const productId = req.params.id;
+
+    const product = await Product.findById(productId);
 
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
     }
 
-    res.status(200).json(product);
+    // Cập nhật thông tin sản phẩm
+    product.name = name || product.name;
+    product.description = description || product.description;
+    product.image = image || product.image;
+    product.category = category || product.category;
+
+    const updatedProduct = await product.save();
+    res.json(updatedProduct);
   } catch (error) {
-    res.status(500).json({ message: "Server error", error });
+    res.status(500).json({ message: "Error updating product", error });
   }
 };
-
-//Update product
-export const updateProduct = async (req, res) => {
+// Thêm variation vào sản phẩm
+export const addVariationToProduct = async (req, res) => {
   try {
-    const { name, description, image, category, variation } = req.body;
-
+    const { productId, variationId } = req.body;
     const updatedProduct = await Product.findByIdAndUpdate(
-      req.params.id,
-      { name, description, image, category, variation },
-      { new: true, runValidators: true }
-    );
-
-    if (!updatedProduct) {
-      return res.status(404).json({ message: "Product not found" });
-    }
+      productId,
+      { $push: { variation: variationId } },
+      { new: true }
+    ).populate("variation");
 
     res.status(200).json(updatedProduct);
   } catch (error) {
-    res.status(500).json({ message: "Server error", error });
+    res.status(500).json({ message: error.message });
   }
 };
 
-//Delete product
+// Xóa sản phẩm
 export const deleteProduct = async (req, res) => {
   try {
-    const deletedProduct = await Product.findByIdAndDelete(req.params.id);
-
-    if (!deletedProduct) {
+    const productId = req.params.id;
+    const deletedProduct = await Product.findByIdAndDelete(productId);
+    if (!deletedProduct)
       return res.status(404).json({ message: "Product not found" });
-    }
 
     res.status(200).json({ message: "Product deleted successfully" });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error });
+    res.status(500).json({ message: error.message });
   }
 };
