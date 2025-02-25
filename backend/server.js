@@ -1,17 +1,13 @@
-import mongoose from "mongoose";
-import dotenv from "dotenv";
-import app from "./app.js"; // Đảm bảo rằng bạn đã export app từ file app.js
+import mongoose from 'mongoose';
+import dotenv from 'dotenv';
+import app from './app.js'; // Đảm bảo rằng bạn đã export app từ file app.js
+dotenv.config();
 
-dotenv.config({ path: "./config.env" });
+const DB = process.env.DATABASE.replace('<PASSWORD>', process.env.DATABASE_PASSWORD);
 
-const DB = process.env.DATABASE.replace(
-  "<PASSWORD>",
-  process.env.DATABASE_PASSWORD
-);
-
-mongoose.connect(DB).then(() => console.log("DB connection is successful!"));
+mongoose.connect(DB).then(() => console.log('DB connection is successfully!'));
 
 const port = process.env.PORT || 3000;
 const server = app.listen(port, () => {
-  console.log(`App is running on port ${port}...`);
+	console.log(`App is running on port ${port}...`);
 });
