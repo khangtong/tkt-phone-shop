@@ -6,6 +6,7 @@ import authRoutes from './routes/authRoute.js';
 import productRoutes from './routes/productRoute.js';
 import variationRoutes from './routes/variationRoute.js';
 import categoryRoute from './routes/categoryRoute.js';
+import cartRoute from './routes/cartRoute.js';
 
 const app = express();
 
@@ -18,6 +19,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/variations', variationRoutes);
 app.use('/api/categories', categoryRoute);
+app.use('/api/carts', cartRoute);
 
 app.get('/', (req, res) => {
   res.send('Hello World!');
