@@ -14,7 +14,7 @@ const router = express.Router();
 
 router.post('/', protect, isAdmin, createProduct);
 router.get('/', getAllProducts);
-router.get('/search', protect, searchProducts);
+router.get('/search', searchProducts);
 router.get('/:id', getProductById);
 router.put('/:id', protect, isAdmin, updateProduct);
 router.put('/add-variation', protect, isAdmin, addVariationToProduct);
