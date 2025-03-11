@@ -3,7 +3,7 @@ import {
   createOrder,
   getAllOrders,
   getUserOrders,
-  updateOrderStatus,
+  // updateOrderStatus,
   deleteOrder,
 } from "../controllers/orderController.js";
 import { protect, isAdmin } from "../middlewares/authMiddleware.js";
