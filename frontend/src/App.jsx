@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 // import { useState } from "react";
 import Header from "./components/Header";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
@@ -65,14 +64,6 @@ function App() {
       <Footer />
     </BrowserRouter>
   );
-=======
-function App() {
-	return (
-		<>
-			<h1 className='text-red-500'>Test</h1>
-		</>
-	);
->>>>>>> 22a5773b28668927462ae0e6395cfa8c709e4a07
 }
 
 export default App;

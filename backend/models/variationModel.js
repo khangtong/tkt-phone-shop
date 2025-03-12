@@ -28,7 +28,7 @@ const variationSchema = new mongoose.Schema({
   product: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "product",
-    required: true, // Biến thể phải thuộc một sản phẩm
+    // required: true,
   },
 });
 
