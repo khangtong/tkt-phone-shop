@@ -1,18 +1,20 @@
-import { combineReducers, configureStore } from "@reduxjs/toolkit";
-import userReducer from "./user/userSlice";
-import productReducer from "./product/productSlice";
-import { persistReducer, persistStore } from "redux-persist";
-import storage from "redux-persist/lib/storage";
-import variationReducer from "./variation/variationSlice";
+import { combineReducers, configureStore } from '@reduxjs/toolkit';
+import userReducer from './user/userSlice';
+import productReducer from './product/productSlice';
+import categoryReducer from './category/categorySlice';
+import { persistReducer, persistStore } from 'redux-persist';
+import storage from 'redux-persist/lib/storage';
+import variationReducer from './variation/variationSlice';
 
 const rootReducer = combineReducers({
   user: userReducer,
   product: productReducer,
   variation: variationReducer,
+  category: categoryReducer,
 });
 
 const persistConfig = {
-  key: "root",
+  key: 'root',
   storage,
   version: 1,
 };
