@@ -130,7 +130,8 @@ export default function UpdateVariation() {
               value={selectedProduct}
               onChange={handleProductChange}
               required
-              className="w-full p-3 border rounded-xl"
+              className="w-full p-3 border rounded-xl "
+              disabled
             >
               <option value="">Chọn sản phẩm</option>
               {products.length > 0 ? (
