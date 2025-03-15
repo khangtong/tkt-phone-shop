@@ -20,60 +20,52 @@ import CreateVariation from './components/dashboard/Variation/CreateVariation';
 import VariationDashboard from './components/dashboard/Variation/VariationDashboard';
 import CreateCategory from './components/dashboard/Category/CreateCategory';
 import UpdateCategory from './components/dashboard/Category/UpdateCategory';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
+import CreateDiscount from './components/dashboard/Discount/CreateDiscount';
+import DiscountDashboard from './components/dashboard/Discount/DiscountDashboard';
+import UpdateDiscount from './components/dashboard/Discount/UpdateDiscount';
 
 function App() {
-  return (
-    <BrowserRouter>
-      <Header />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/profile/order" element={<Order />} />
-        <Route element={<AdminRoute />}>
-          <Route
-            path="/admin/dashboard/product"
-            element={<ProductDashboard />}
-          />
-          <Route path="/admin/dashboard/product/:id" element={<Product />} />
-          <Route
-            path="/admin/dashboard/category"
-            element={<CategoryDashboard />}
-          />
-          <Route
-            path="/admin/dashboard/category/add"
-            element={<CreateCategory />}
-          />
-          <Route
-            path="/admin/dashboard/product/add"
-            element={<CreateProduct />}
-          />
-        </Route>
-        <Route
-          path="/admin/dashboard/product/update/:id"
-          element={<UpdateProduct />}
-        ></Route>
-        <Route
-          path="/admin/dashboard/category/update/:id"
-          element={<UpdateCategory />}
-        ></Route>
-        <Route
-          path="/admin/dashboard/variation/"
-          element={<VariationDashboard />}
-        ></Route>
-        <Route
-          path="/admin/dashboard/variation/add"
-          element={<CreateVariation />}
-        ></Route>
-        <Route
-          path="/admin/dashboard/variation/update/:id"
-          element={<UpdateVariation />}
-        ></Route>
-      </Routes>
-      <Footer />
-    </BrowserRouter>
-  );
+	return (
+		<BrowserRouter>
+			<Header />
+			<Routes>
+				<Route path='/' element={<Home />} />
+				<Route path='/register' element={<Register />} />
+				<Route path='/login' element={<Login />} />
+				<Route path='/forgot-password' element={<ForgotPassword />} />
+				<Route path='/reset-password' element={<ResetPassword />} />
+				<Route path='/profile' element={<Profile />} />
+				<Route path='/profile/order' element={<Order />} />
+				<Route element={<AdminRoute />}>
+					<Route path='/admin/dashboard/product' element={<ProductDashboard />} />
+					<Route path='/admin/dashboard/product/add' element={<CreateProduct />} />
+					<Route path='/admin/dashboard/product/update/:id' element={<UpdateProduct />} />
+					<Route path='/admin/dashboard/product/:id' element={<Product />} />
+					<Route path='/admin/dashboard/category' element={<CategoryDashboard />} />
+					<Route path='/admin/dashboard/category/add' element={<CreateCategory />} />
+					<Route
+						path='/admin/dashboard/category/update/:id'
+						element={<UpdateCategory />}
+					/>
+					<Route path='/admin/dashboard/variation/' element={<VariationDashboard />} />
+					<Route path='/admin/dashboard/variation/add' element={<CreateVariation />} />
+					<Route
+						path='/admin/dashboard/variation/update/:id'
+						element={<UpdateVariation />}
+					/>
+					<Route path='/admin/dashboard/discount' element={<DiscountDashboard />} />
+					<Route path='/admin/dashboard/discount/add' element={<CreateDiscount />} />
+					<Route
+						path='/admin/dashboard/discount/update/:id'
+						element={<UpdateDiscount />}
+					/>
+				</Route>
+			</Routes>
+			<Footer />
+		</BrowserRouter>
+	);
 }
 
 export default App;

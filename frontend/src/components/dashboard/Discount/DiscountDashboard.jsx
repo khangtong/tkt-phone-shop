@@ -4,36 +4,40 @@ import Sidebar from '../../Sidebar';
 import { FaEdit, FaSearch, FaTrash } from 'react-icons/fa';
 import { IoAddOutline } from 'react-icons/io5';
 import { useSelector } from 'react-redux';
+import CustomModalConfirm from '../../CustomModal';
 
-export default function CategoryDashboard() {
-	const [activeTab, setActiveTab] = useState('categories');
+export default function DiscountDashboard() {
+	const [activeTab, setActiveTab] = useState('discounts');
+	const [openModal, setOpenModal] = useState(false);
 	const [searchTerm, setSearchTerm] = useState('');
-	const [categories, setCategories] = useState([]);
-	const [filteredCategories, setFilteredCategories] = useState([]);
+	const [discounts, setDiscounts] = useState([]);
+	const [discountId, setDiscountId] = useState('');
+	const [filteredDiscounts, setFilteredDiscounts] = useState([]);
 	const [loading, setLoading] = useState(false);
 	const { currentUser } = useSelector((state) => state.user);
 	const [toast, setToast] = useState(null);
 	const [currentPage, setCurrentPage] = useState(1);
 	const itemsPerPage = 8;
 
-	const fetchCategories = async () => {
+	const fetchDiscounts = async () => {
 		setLoading(true);
 		try {
-			const response = await fetch('/api/categories');
-			if (!response.ok) throw new Error('Lỗi khi lấy danh mục');
+			const response = await fetch('/api/discounts');
+			if (!response.ok) throw new Error('Lỗi khi lấy mã giảm giá');
 			const data = await response.json();
 
-			setCategories(data);
-			setFilteredCategories(data);
+			setDiscounts(data.discounts);
+			setFilteredDiscounts(data.discounts);
 		} catch (error) {
 			console.error(error);
 		}
 		setLoading(false);
 	};
 
-	const handleDeleteCategory = async (categoryID) => {
+	const handleDeleteDiscount = async (discountID) => {
+		setOpenModal(false);
 		try {
-			const res = await fetch(`/api/categories/${categoryID}`, {
+			const res = await fetch(`/api/discounts/${discountID}`, {
 				method: 'DELETE',
 				headers: {
 					'Content-Type': 'application/json',
@@ -47,37 +51,44 @@ export default function CategoryDashboard() {
 				return;
 			}
 
-			setCategories((prev) => prev.filter((category) => category._id !== categoryID));
-			setFilteredCategories((prev) => prev.filter((category) => category._id !== categoryID));
-			setToast({ type: 'success', message: 'Xóa danh mục thành công!' });
+			setDiscounts((prev) => prev.filter((discount) => discount._id !== discountID));
+			setFilteredDiscounts((prev) => prev.filter((discount) => discount._id !== discountID));
+			setToast({ type: 'success', message: 'Xóa mã giảm giá thành công!' });
 
 			setTimeout(() => setToast(null), 3000);
 		} catch (error) {
-			setToast({ type: 'error', message: 'Lỗi khi xóa danh mục.' });
+			setToast({ type: 'error', message: 'Lỗi khi xóa mã giảm giá.' });
 		}
 	};
 
 	useEffect(() => {
-		fetchCategories();
+		fetchDiscounts();
 	}, []);
 
 	useEffect(() => {
 		if (searchTerm) {
-			const filtered = categories.filter((category) =>
-				category.name.toLowerCase().includes(searchTerm.toLowerCase()),
+			const filtered = discounts.filter((discount) =>
+				discount.name.toLowerCase().includes(searchTerm.toLowerCase()),
 			);
-			setFilteredCategories(filtered);
+			setFilteredDiscounts(filtered);
 		} else {
-			setFilteredCategories(categories);
+			setFilteredDiscounts(discounts);
 		}
 		setCurrentPage(1);
-	}, [searchTerm, categories]);
+	}, [searchTerm, discounts]);
 
-	const totalPages = Math.ceil(filteredCategories.length / itemsPerPage);
-	const currentCategories = filteredCategories.slice(
+	const totalPages = Math.ceil(filteredDiscounts.length / itemsPerPage);
+	const currentDiscounts = filteredDiscounts.slice(
 		(currentPage - 1) * itemsPerPage,
 		currentPage * itemsPerPage,
 	);
+
+	const formatDateFromISO = (isoString) => {
+		if (!isoString) return '';
+
+		const date = new Date(isoString);
+		return date.toLocaleDateString('vi-VN');
+	};
 
 	const goToPage = (page) => {
 		setCurrentPage(page);
@@ -102,17 +113,17 @@ export default function CategoryDashboard() {
 						<div className='relative w-1/3'>
 							<input
 								type='text'
-								placeholder='Tìm kiếm danh mục...'
+								placeholder='Tìm kiếm mã giảm giá...'
 								value={searchTerm}
 								onChange={(e) => setSearchTerm(e.target.value)}
 								className='w-full p-2 pl-10 border rounded-lg'
 							/>
 							<FaSearch className='absolute left-3 top-3 text-gray-400' />
 						</div>
-						<Link to={'/admin/dashboard/category/add'}>
+						<Link to={'/admin/dashboard/discount/add'}>
 							<button className='bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center'>
 								<IoAddOutline className='mr-1 text-lg' />
-								Thêm danh mục mới
+								Thêm mã giảm giá mới
 							</button>
 						</Link>
 					</div>
@@ -120,43 +131,48 @@ export default function CategoryDashboard() {
 					<div className='overflow-x-auto'>
 						{loading ? (
 							<p className='text-center text-gray-500'>Đang tải dữ liệu...</p>
-						) : filteredCategories.length > 0 ? (
+						) : filteredDiscounts.length > 0 ? (
 							<>
 								<table className='w-full border-collapse bg-white'>
 									<thead>
 										<tr className='bg-gray-200 text-left'>
 											<th className='p-3'>STT</th>
-											<th className='p-3'>Tên danh mục</th>
-											<th className='p-3'>Logo</th>
+											<th className='p-3'>Tên mã giảm giá</th>
+											<th className='p-3'>Phần trăm giảm giá</th>
+											<th className='p-3'>Ngày bắt đầu</th>
+											<th className='p-3'>Ngày kết thúc</th>
 											<th className='p-3'>Hành động</th>
 										</tr>
 									</thead>
 									<tbody>
-										{currentCategories.map((category, index) => (
-											<tr key={category._id} className='border-t'>
+										{currentDiscounts.map((discount, index) => (
+											<tr key={discount._id} className='border-t'>
 												<td className='p-3'>
 													{(currentPage - 1) * itemsPerPage + index + 1}
 												</td>
-												<td className='p-3'>{category.name}</td>
 												<td className='p-3'>
-													<img
-														src={category.logo}
-														alt={category.name}
-														className='h-auto w-[140px] object-cover rounded-md border'
-													/>
+													{discount.name.toUpperCase()}
+												</td>
+												<td className='p-3'>{discount.amount}</td>
+												<td className='p-3'>
+													{formatDateFromISO(discount.startDate)}
+												</td>
+												<td className='p-3'>
+													{formatDateFromISO(discount.endDate)}
 												</td>
 												<td className='p-3 flex space-x-2'>
 													<Link
-														to={`/admin/dashboard/category/update/${category._id}`}>
+														to={`/admin/dashboard/discount/update/${discount._id}`}>
 														<button className='bg-green-500 p-2 text-white rounded-lg'>
 															<FaEdit />
 														</button>
 													</Link>
 													<button
 														className='bg-red-500 p-2 text-white rounded-lg'
-														onClick={() =>
-															handleDeleteCategory(category._id)
-														}>
+														onClick={() => {
+															setOpenModal(true);
+															setDiscountId(discount._id);
+														}}>
 														<FaTrash />
 													</button>
 												</td>
@@ -183,12 +199,23 @@ export default function CategoryDashboard() {
 								</div>
 							</>
 						) : (
-							<tr>
-								<td colSpan='4' className='text-center p-4 text-gray-500'>
-									Không tìm thấy danh mục nào.
-								</td>
-							</tr>
+							<table className='w-full border-collapse bg-white'>
+								<tbody>
+									<tr>
+										<td colSpan='6' className='text-center p-4 text-gray-500'>
+											Không tìm thấy mã giảm giá nào.
+										</td>
+									</tr>
+								</tbody>
+							</table>
 						)}
+
+						<CustomModalConfirm
+							openModal={openModal}
+							onClose={() => setOpenModal(false)}
+							textConfirm={'Bạn chắc chắc muốn xoá mã giảm giá này?'}
+							performAction={() => handleDeleteDiscount(discountId)}
+						/>
 					</div>
 				</div>
 			</div>

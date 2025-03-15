@@ -32,7 +32,7 @@ export const getAllDiscounts = async (req, res) => {
 
 		return res.status(201).json({
 			message: 'Get all discounts',
-			data: discounts,
+			discounts,
 		});
 	} catch (error) {
 		res.status(500).json({
@@ -54,7 +54,7 @@ export const getDiscountById = async (req, res) => {
 
 		return res.status(201).json({
 			message: 'Get discount by id',
-			data: discount,
+			discount,
 		});
 	} catch (error) {
 		res.status(500).json({
@@ -85,7 +85,7 @@ export const updateDiscount = async (req, res) => {
 		}
 
 		res.status(200).json({
-			message: 'Update discount successfully',
+			message: 'Cập nhật mã giảm giá thành công',
 			data: discount,
 		});
 	} catch (error) {
