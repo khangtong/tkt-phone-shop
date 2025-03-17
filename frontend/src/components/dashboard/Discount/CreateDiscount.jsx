@@ -5,6 +5,7 @@ import {
 	addDiscountStart,
 	addDiscountSuccess,
 	addDiscountFailure,
+	resetState,
 } from '../../../redux/discount/discountSlice';
 import Sidebar from '../../Sidebar';
 import { Toast } from 'flowbite-react';
@@ -57,7 +58,7 @@ export default function CreateDiscount() {
 
 		const start = new Date(formData.startDate);
 		const end = new Date(formData.endDate);
-		
+
 		if (start > end) {
 			setToast({
 				type: 'error',
@@ -87,6 +88,7 @@ export default function CreateDiscount() {
 			setToast({ type: 'success', message: 'Tạo mã giảm giá thành công!' });
 
 			setTimeout(() => {
+				dispatch(resetState());
 				navigate('/admin/dashboard/discount');
 			}, 1000);
 		} catch (error) {

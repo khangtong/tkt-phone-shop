@@ -66,6 +66,16 @@ export default function UpdateDiscount() {
 	const handleSubmit = async (e) => {
 		e.preventDefault();
 
+		const start = new Date(formData.startDate);
+		const end = new Date(formData.endDate);
+
+		if (start > end) {
+			setToast({
+				type: 'error',
+				message: 'Ngày bắt đầu phải trước hoặc bằng ngày kết thúc!',
+			});
+			return;
+		}
 		try {
 			const res = await fetch(`/api/discounts/${id}`, {
 				method: 'PUT',

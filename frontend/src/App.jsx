@@ -25,6 +25,8 @@ import ResetPassword from './pages/ResetPassword';
 import CreateDiscount from './components/dashboard/Discount/CreateDiscount';
 import DiscountDashboard from './components/dashboard/Discount/DiscountDashboard';
 import UpdateDiscount from './components/dashboard/Discount/UpdateDiscount';
+import AddToVariationDashboard from './components/dashboard/Discount/AddToVariationDashboard';
+import AddToVariation from './components/dashboard/Discount/AddToVariation';
 
 function App() {
 	return (
@@ -60,6 +62,14 @@ function App() {
 					<Route
 						path='/admin/dashboard/discount/update/:id'
 						element={<UpdateDiscount />}
+					/>
+					<Route
+						path='/admin/dashboard/discount/variation'
+						element={<AddToVariationDashboard />}
+					/>
+					<Route
+						path='/admin/dashboard/discount/variation/add'
+						element={<AddToVariation />}
 					/>
 				</Route>
 			</Routes>

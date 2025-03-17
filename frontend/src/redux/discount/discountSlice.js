@@ -1,4 +1,4 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createAction, createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
 	discounts: [],
@@ -10,6 +10,11 @@ const discountSlice = createSlice({
 	name: 'discount',
 	initialState,
 	reducers: {
+		resetState: (state) => {
+			state.discounts = [];
+			state.loading = false;
+			state.error = null;
+		},
 		addDiscountStart: (state) => {
 			state.discounts = [];
 			state.loading = true;
@@ -65,6 +70,7 @@ const discountSlice = createSlice({
 });
 
 export const {
+	resetState,
 	addDiscountStart,
 	addDiscountSuccess,
 	addDiscountFailure,

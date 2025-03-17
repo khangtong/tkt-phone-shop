@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { HiOutlineExclamationCircle } from 'react-icons/hi';
 
 export default function CustomModalConfirm(props) {
-	const { textConfirm, openModal, onClose, performAction, okText, title } = props;
+	const { textConfirm, openModal, onClose, performAction } = props;
 	return (
 		<>
 			<Modal show={openModal} size='md' onClose={onClose} popup>
