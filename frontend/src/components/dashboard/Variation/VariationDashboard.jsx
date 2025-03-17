@@ -79,7 +79,8 @@ export default function VariationDashboard() {
   const filteredVariations = variations.filter((variation) => {
     const searchLower = searchTerm.toLowerCase();
     return (
-      variation.product?.name.toLowerCase().includes(searchLower) ||
+      variation.product?.name?.toLowerCase() ||
+      // "" ||
       variation.color.toLowerCase().includes(searchLower) ||
       variation.ram.toString().includes(searchTerm) ||
       variation.rom.toString().includes(searchTerm) ||
