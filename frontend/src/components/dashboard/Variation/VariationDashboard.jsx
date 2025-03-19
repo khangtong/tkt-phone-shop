@@ -79,8 +79,7 @@ export default function VariationDashboard() {
   const filteredVariations = variations.filter((variation) => {
     const searchLower = searchTerm.toLowerCase();
     return (
-      variation.product?.name?.toLowerCase() ||
-      // "" ||
+      (variation.product?.name?.toLowerCase() || "").includes(searchLower) ||
       variation.color.toLowerCase().includes(searchLower) ||
       variation.ram.toString().includes(searchTerm) ||
       variation.rom.toString().includes(searchTerm) ||
@@ -177,9 +176,7 @@ export default function VariationDashboard() {
                             : "Không có"}
                         </td>
                         <td className="p-3 flex space-x-2">
-                          <Link
-                            to={`/admin/dashboard/product/${variation.product?._id}`}
-                          >
+                          <Link to={`/product/${variation.product?._id}`}>
                             <button className="bg-blue-500 p-2 text-white rounded-lg">
                               <FaEye />
                             </button>

@@ -24,11 +24,12 @@ const variationSchema = new mongoose.Schema({
   discount: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "discount",
+    default: null,
   },
   product: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "product",
-    required: true,
+    // required: true,
   },
 });
 

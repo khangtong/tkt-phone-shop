@@ -14,7 +14,7 @@ export const createDiscount = async (req, res) => {
 		const discount = await Discount.create({ name, amount, startDate, endDate });
 
 		return res.status(201).json({
-			message: 'Discount created successfully',
+			message: 'Tạo mã giảm giá thành công',
 			data: discount,
 		});
 	} catch (error) {
@@ -104,7 +104,7 @@ export const deleteDiscount = async (req, res) => {
 		}
 
 		// Xóa giảm giá trong biến thể liên quan
-		await Variation.updateOne({ discount: req.params.id }, { $unset: { discount: '' } });
+		await Variation.updateMany({ discount: req.params.id }, { $set: { discount: null } });
 
 		res.status(200).json({ message: 'Xóa giảm giá thành công!' });
 	} catch (error) {
@@ -114,23 +114,42 @@ export const deleteDiscount = async (req, res) => {
 
 export const addDiscountToVariation = async (req, res) => {
 	try {
-		const { id } = req.params;
-		const { discountId } = req.body;
+		const { discountId, variationIds } = req.body;
 
-		const variation = await Variation.findById(id);
-
-		if (!variation) {
-			return res.status(404).json({ message: 'Variation not found' });
+		if (!variationIds || !Array.isArray(variationIds) || variationIds.length === 0) {
+			return res.status(400).json({ message: 'Danh sách ID biến thể không hợp lệ' });
 		}
 
-		const addDiscount = await Variation.findByIdAndUpdate(
-			id,
-			{ $set: { discount: discountId } },
-			{ new: true },
-		).populate('discount');
+		const updates = await Promise.all(
+			variationIds.map((id) =>
+				Variation.findByIdAndUpdate(
+					id,
+					{ $set: { discount: discountId } },
+					{ new: true },
+				).populate('discount'),
+			),
+		);
 
-		res.status(200).json(addDiscount);
+		res.status(200).json({ message: 'Cập nhật thành công', variations: updates });
 	} catch (error) {
 		res.status(500).json({ message: error.message });
+	}
+};
+
+export const deleteDiscountFromVariation = async (req, res) => {
+	try {
+		const { variationId } = req.body;
+		const variation = await Variation.findById(variationId);
+
+		if (!variation) {
+			return res.status(404).json({ message: 'Không tìm thấy biến thể.' });
+		}
+
+		variation.discount = null;
+		await variation.save();
+
+		return res.status(200).json({ message: 'Đã gỡ mã giảm giá khỏi biến thể thành công.' });
+	} catch (error) {
+		res.status(500).json({ message: 'Lỗi server', error: error.message });
 	}
 };

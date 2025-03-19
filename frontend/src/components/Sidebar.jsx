@@ -163,6 +163,13 @@ export default function Sidebar({ activeTab, setActiveTab }) {
 								<FaPlus className='mr-2' /> Thêm mã giảm giá
 							</button>
 						</Link>
+
+						<Link to='/admin/dashboard/discount/variation' className='block'>
+							<button className='flex items-center bg-lime-500 hover:bg-lime-600 text-white px-4 py-2 w-full rounded-lg'>
+								<FaPlus className='mr-2' />
+								Thêm mã cho biến thể
+							</button>
+						</Link>
 					</div>
 				)}
 				<hr className='border-gray-300 my-4' />

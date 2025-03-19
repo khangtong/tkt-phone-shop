@@ -33,10 +33,9 @@ export const createVariation = async (req, res) => {
 // Lấy tất cả biến thể, kèm theo tên sản phẩm
 export const getAllVariations = async (req, res) => {
   try {
-    const variations = await Variation.find().populate({
-      path: "product",
-      select: "name", // Chỉ lấy tên sản phẩm
-    });
+    const variations = await Variation.find()
+      .populate("product")
+      .populate("discount");
 
     res.status(200).json(variations);
   } catch (error) {
@@ -47,10 +46,9 @@ export const getAllVariations = async (req, res) => {
 // Lấy một biến thể theo ID
 export const getVariationById = async (req, res) => {
   try {
-    const variation = await Variation.findById(req.params.id).populate(
-      "product",
-      "name"
-    );
+    const variation = await Variation.findById(req.params.id)
+      .populate("product", "name")
+      .populate("discount", "name amount");
     if (!variation)
       return res.status(404).json({ message: "Variation not found" });
     res.status(200).json(variation);

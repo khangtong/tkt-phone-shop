@@ -1,4 +1,5 @@
 import Product from "../models/productModel.js";
+import Variation from "../models/variationModel.js";
 
 // Tạo một sản phẩm mới
 export const createProduct = async (req, res) => {
@@ -16,13 +17,28 @@ export const getAllProducts = async (req, res) => {
   try {
     const products = await Product.find()
       .populate("category")
-      .populate("variation");
+      .populate({
+        path: "variation",
+        populate: { path: "discount" }, // Populate discount
+      });
     res.status(200).json(products);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
+// Lấy sản phẩm theo danh mục
+export const getProductsByCategory = async (req, res) => {
+  try {
+    const { categoryId } = req.params;
+    const products = await Product.find({ category: categoryId })
+      .populate("category")
+      .populate("variation");
 
+    res.status(200).json(products);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 // Lấy sản phẩm theo ID
 export const getProductById = async (req, res) => {
   try {
@@ -96,7 +112,9 @@ export const addVariationToProduct = async (req, res) => {
 export const deleteProduct = async (req, res) => {
   try {
     const productId = req.params.id;
+    await Variation.deleteMany({ product: productId });
     const deletedProduct = await Product.findByIdAndDelete(productId);
+
     if (!deletedProduct) {
       return res.status(404).json({ message: "Product not found" });
     }

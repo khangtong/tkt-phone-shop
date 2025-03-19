@@ -4,18 +4,21 @@ import Sidebar from "../../Sidebar";
 import { FaSearch, FaEye, FaEdit, FaTrash } from "react-icons/fa";
 import { IoAddOutline } from "react-icons/io5";
 import { useSelector } from "react-redux";
+import CustomModalConfirm from "../../CustomModal";
 
 export default function ProductDashboard() {
   const [activeTab, setActiveTab] = useState("products");
   const [searchTerm, setSearchTerm] = useState("");
   const [products, setProducts] = useState([]);
-  const [filteredProducts, setFilteredProducts] = useState([]); // State để lưu trữ sản phẩm đã lọc
+  const [filteredProducts, setFilteredProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const { currentUser } = useSelector((state) => state.user);
-  const [toast, setToast] = useState(null); // Thêm state cho thông báo
-  const [currentPage, setCurrentPage] = useState(1); // State để theo dõi trang hiện tại
-  const itemsPerPage = 8; // Số sản phẩm hiển thị trên mỗi trang
+  const [toast, setToast] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
+  const [openModal, setOpenModal] = useState(false);
+  const [productIdToDelete, setProductIdToDelete] = useState(null);
 
   const fetchProducts = async () => {
     setLoading(true);
@@ -24,7 +27,7 @@ export default function ProductDashboard() {
       if (!response.ok) throw new Error("Lỗi khi lấy sản phẩm");
       const data = await response.json();
       setProducts(data);
-      setFilteredProducts(data); // Khởi tạo filteredProducts với toàn bộ sản phẩm
+      setFilteredProducts(data);
     } catch (error) {
       console.error(error);
     }
@@ -55,9 +58,11 @@ export default function ProductDashboard() {
       );
       setToast({ type: "success", message: "Xóa sản phẩm thành công!" });
 
+      // Đóng modal sau khi xóa thành công
+      setOpenModal(false);
+
       // Tự động ẩn thông báo sau 3 giây
       setTimeout(() => setToast(null), 3000);
-      // eslint-disable-next-line no-unused-vars
     } catch (error) {
       setToast({ type: "error", message: "Lỗi khi xóa sản phẩm." });
     }
@@ -79,7 +84,6 @@ export default function ProductDashboard() {
     fetchCategories();
   }, []);
 
-  // Lọc sản phẩm dựa trên từ khóa tìm kiếm
   useEffect(() => {
     if (searchTerm) {
       const filtered = products.filter((product) =>
@@ -87,9 +91,9 @@ export default function ProductDashboard() {
       );
       setFilteredProducts(filtered);
     } else {
-      setFilteredProducts(products); // Nếu không có từ khóa, hiển thị toàn bộ sản phẩm
+      setFilteredProducts(products);
     }
-    setCurrentPage(1); // Reset về trang đầu tiên khi tìm kiếm
+    setCurrentPage(1);
   }, [searchTerm, products]);
 
   const getCategoryName = (category) => {
@@ -102,16 +106,13 @@ export default function ProductDashboard() {
     return text.length > length ? text.slice(0, length) + "..." : text;
   };
 
-  // Tính toán số trang
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
 
-  // Lấy danh sách sản phẩm cho trang hiện tại
   const currentProducts = filteredProducts.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
-  // Hàm chuyển trang
   const goToPage = (page) => {
     setCurrentPage(page);
   };
@@ -122,7 +123,6 @@ export default function ProductDashboard() {
 
       <div className="w-4/5 p-6">
         <div className="bg-white p-6 rounded-xl shadow-lg">
-          {/* Thông báo */}
           {toast && (
             <div
               className={`fixed top-5 right-5 p-4 rounded-lg shadow-lg text-white ${
@@ -133,7 +133,6 @@ export default function ProductDashboard() {
             </div>
           )}
 
-          {/* Header */}
           <div className="flex justify-between items-center mb-4">
             <div className="relative w-1/3">
               <input
@@ -153,7 +152,6 @@ export default function ProductDashboard() {
             </Link>
           </div>
 
-          {/* Table */}
           <div className="overflow-x-auto">
             {loading ? (
               <p className="text-center text-gray-500">Đang tải dữ liệu...</p>
@@ -195,7 +193,7 @@ export default function ProductDashboard() {
                           )}
                         </td>
                         <td className="p-3 flex space-x-2">
-                          <Link to={`/admin/dashboard/product/${product._id}`}>
+                          <Link to={`/product/${product._id}`}>
                             <button className="bg-blue-500 p-2 text-white rounded-lg">
                               <FaEye />
                             </button>
@@ -209,7 +207,10 @@ export default function ProductDashboard() {
                           </Link>
                           <button
                             className="bg-red-500 p-2 text-white rounded-lg"
-                            onClick={() => handleDeleteProduct(product._id)}
+                            onClick={() => {
+                              setOpenModal(true);
+                              setProductIdToDelete(product._id);
+                            }}
                           >
                             <FaTrash />
                           </button>
@@ -219,7 +220,6 @@ export default function ProductDashboard() {
                   </tbody>
                 </table>
 
-                {/* Phân trang */}
                 <div className="flex justify-center mt-6">
                   {Array.from({ length: totalPages }, (_, i) => i + 1).map(
                     (page) => (
@@ -246,6 +246,13 @@ export default function ProductDashboard() {
               </tr>
             )}
           </div>
+
+          <CustomModalConfirm
+            openModal={openModal}
+            onClose={() => setOpenModal(false)}
+            textConfirm={"Bạn chắc chắc muốn xoá sản phẩm này?"}
+            performAction={() => handleDeleteProduct(productIdToDelete)}
+          />
         </div>
       </div>
     </div>
