@@ -8,6 +8,7 @@ const Home = () => {
   const [loadingCategories, setLoadingCategories] = useState(false);
   const [loadingVariations, setLoadingVariations] = useState(false);
   const [loadingProducts, setLoadingProducts] = useState(false);
+  const [selectedVariants, setSelectedVariants] = useState({});
   const categoriesContainerRef = useRef(null);
   const productsContainerRefs = useRef({});
   const discountsContainerRef = useRef(null);
@@ -66,19 +67,13 @@ const Home = () => {
 
     products.forEach((product) => {
       if (product.category && groupedProducts[product.category.name]) {
-        product.variation.forEach((variation) => {
-          groupedProducts[product.category.name].push({
-            ...product,
-            variation: [variation], // Tách biến thể thành từng sản phẩm riêng
-          });
-        });
+        groupedProducts[product.category.name].push(product);
       }
     });
 
     return groupedProducts;
   };
 
-  // Hàm kiểm tra xem giảm giá có đang trong thời gian áp dụng hay không
   const isDiscountActive = (discount) => {
     if (!discount || !discount.startDate || !discount.endDate) return false;
     const currentDate = new Date();
@@ -87,7 +82,6 @@ const Home = () => {
     return currentDate >= startDate && currentDate <= endDate;
   };
 
-  // Hàm cuộn chung
   const scrollContainer = (containerRef, direction) => {
     if (containerRef.current) {
       const scrollAmount = direction === "left" ? -200 : 200;
@@ -98,13 +92,11 @@ const Home = () => {
     }
   };
 
-  // Hàm cuộn cho danh mục
   const scrollCategoriesLeft = () =>
     scrollContainer(categoriesContainerRef, "left");
   const scrollCategoriesRight = () =>
     scrollContainer(categoriesContainerRef, "right");
 
-  // Hàm cuộn cho giảm giá
   const scrollDiscountsLeft = () =>
     scrollContainer(discountsContainerRef, "left");
   const scrollDiscountsRight = () =>
@@ -112,7 +104,6 @@ const Home = () => {
 
   const groupedProducts = groupProductsByCategory();
 
-  // Lọc các biến thể đang trong thời gian giảm giá
   const activeDiscountedVariations = variations.filter((variation) => {
     return (
       variation.discount &&
@@ -133,12 +124,18 @@ const Home = () => {
     return price - (price * discountAmount) / 100;
   };
 
-  // Hàm định dạng ROM
   const formatRom = (rom) => {
     if (rom > 1023) {
       return `${(rom / 1024).toFixed(0)} TB`;
     }
     return `${rom} GB`;
+  };
+
+  const handleVariantChange = (productId, variant) => {
+    setSelectedVariants((prev) => ({
+      ...prev,
+      [productId]: variant,
+    }));
   };
 
   return (
@@ -219,8 +216,19 @@ const Home = () => {
                   <Link
                     key={variation._id}
                     to={`/product/${product._id}`}
+                    onClick={() => {
+                      localStorage.setItem(
+                        "selectedProduct",
+                        JSON.stringify({
+                          productId: product._id,
+                          productName: product.name,
+                          productImage: product.image[0],
+                          selectedVariation: variation,
+                        })
+                      );
+                    }}
                     className="flex-none bg-white rounded-lg shadow-md overflow-hidden border border-gray-300"
-                    style={{ width: "230px", height: "420px" }}
+                    style={{ width: "270px", height: "420px" }}
                   >
                     <div className="relative w-full h-50 overflow-hidden">
                       <img
@@ -228,13 +236,10 @@ const Home = () => {
                         alt={product.name || "Sản phẩm"}
                         className="w-full h-full object-cover"
                       />
-
-                      {/* Hiển thị badge "Giảm x%" */}
                       <span className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded">
                         Giảm {variation.discount.amount}%
                       </span>
                     </div>
-
                     <div className="p-4">
                       <h3 className="text-lg font-semibold text-gray-800 line-clamp-2">
                         {product.name} ({variation.color}, {variation.ram}GB
@@ -285,25 +290,47 @@ const Home = () => {
                 }
                 className="flex overflow-x-auto scrollbar-hide gap-5"
               >
-                {groupedProducts[categoryName].length > 0 ? (
-                  groupedProducts[categoryName].map((product) => {
-                    const variation = product.variation[0];
-                    const hasDiscount =
-                      variation.discount?.amount > 0 &&
-                      isDiscountActive(variation.discount);
-                    const discountedPrice = hasDiscount
-                      ? calculateDiscountedPrice(
-                          variation.price,
-                          variation.discount.amount
-                        )
-                      : variation.price;
+                {groupedProducts[categoryName].map((product) => {
+                  const selectedVariant =
+                    selectedVariants[product._id] ||
+                    (product.variation && product.variation.length > 0
+                      ? product.variation[0]
+                      : null);
 
-                    return (
+                  // Kiểm tra nếu không có biến thể
+                  if (!selectedVariant) {
+                    return null; // Không hiển thị sản phẩm nếu không có biến thể
+                  }
+
+                  const hasDiscount =
+                    selectedVariant.discount?.amount > 0 &&
+                    isDiscountActive(selectedVariant.discount);
+                  const discountedPrice = hasDiscount
+                    ? calculateDiscountedPrice(
+                        selectedVariant.price,
+                        selectedVariant.discount.amount
+                      )
+                    : selectedVariant.price;
+
+                  return (
+                    <div
+                      key={product._id}
+                      className="flex-none bg-white rounded-lg shadow-md overflow-hidden border border-gray-300"
+                      style={{ width: "270px", height: "520px" }}
+                    >
                       <Link
-                        key={variation._id}
                         to={`/product/${product._id}`}
-                        className="flex-none bg-white rounded-lg shadow-md overflow-hidden border border-gray-300"
-                        style={{ width: "230px", height: "420px" }}
+                        onClick={() => {
+                          localStorage.setItem(
+                            "selectedProduct",
+                            JSON.stringify({
+                              productId: product._id,
+                              productName: product.name,
+                              productImage: product.image[0],
+                              selectedVariation: selectedVariant,
+                            })
+                          );
+                        }}
                       >
                         <div className="relative w-full h-50 overflow-hidden">
                           <img
@@ -313,47 +340,62 @@ const Home = () => {
                           />
                           {hasDiscount && (
                             <span className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded">
-                              Giảm {variation.discount.amount}%
+                              Giảm {selectedVariant.discount.amount}%
                             </span>
                           )}
                         </div>
                         <div className="p-4">
                           <h3 className="text-lg font-semibold text-gray-800 line-clamp-2">
-                            {product.name} ({variation.color}, {variation.ram}GB
-                            RAM, {formatRom(variation.rom)})
+                            {product.name} ({selectedVariant.color},{" "}
+                            {selectedVariant.ram}GB RAM,{" "}
+                            {formatRom(selectedVariant.rom)})
                           </h3>
-
-                          {/* Hiển thị giá */}
                           <div className="mt-2">
                             {hasDiscount ? (
                               <>
                                 <span className="text-gray-500 line-through text-sm mr-2">
-                                  {formatPrice(variation.price)}
+                                  {formatPrice(selectedVariant.price)}
                                 </span>
                                 <div className="flex items-center">
                                   <span className="text-red-600 font-bold text-lg">
                                     {formatPrice(discountedPrice)}
                                   </span>
                                   <span className="ml-2 text-sm text-green-600">
-                                    (-{variation.discount.amount}%)
+                                    (-{selectedVariant.discount.amount}%)
                                   </span>
                                 </div>
                               </>
                             ) : (
                               <span className="text-red-600 font-bold text-lg">
-                                {formatPrice(variation.price)}
+                                {formatPrice(selectedVariant.price)}
                               </span>
                             )}
                           </div>
                         </div>
                       </Link>
-                    );
-                  })
-                ) : (
-                  <p className="text-gray-500">
-                    Không có sản phẩm nào trong danh mục này.
-                  </p>
-                )}
+
+                      {/* Hiển thị các tùy chọn biến thể */}
+                      <div className="p-4 mt-4">
+                        <select
+                          onChange={(e) => {
+                            const selectedVariantId = e.target.value;
+                            const selectedVariant = product.variation.find(
+                              (v) => v._id === selectedVariantId
+                            );
+                            handleVariantChange(product._id, selectedVariant);
+                          }}
+                          className="w-full p-2 border border-gray-300 rounded-lg"
+                        >
+                          {product.variation.map((variant) => (
+                            <option key={variant._id} value={variant._id}>
+                              {variant.ram}GB RAM, {formatRom(variant.rom)}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  );
+                })}
               </nav>
             </div>
           </div>

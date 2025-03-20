@@ -85,6 +85,17 @@ const CategoryPage = () => {
                       <Link
                         key={variation._id}
                         to={`/product/${product._id}`}
+                        onClick={() => {
+                          localStorage.setItem(
+                            "selectedProduct",
+                            JSON.stringify({
+                              productId: product._id,
+                              productName: product.name,
+                              productImage: product.image[0],
+                              selectedVariation: variation, // Lưu biến thể được chọn
+                            })
+                          );
+                        }}
                         className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-300"
                       >
                         <div className="relative w-full h-50 overflow-hidden">

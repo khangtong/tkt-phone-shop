@@ -35,11 +35,38 @@ export default function Product() {
         setProduct(productData);
 
         // Fetch danh sách biến thể
-        const variationsRes = await fetch(`/api/variations?product=${id}`);
+        const variationsRes = await fetch(`/api/variations`);
         if (!variationsRes.ok)
           throw new Error("Không thể lấy thông tin biến thể");
         const variationsData = await variationsRes.json();
-        setVariations(variationsData);
+
+        // Lọc biến thể theo productId
+        const filteredVariations = variationsData.filter(
+          (v) => v.product._id === id
+        );
+
+        setVariations(filteredVariations);
+
+        // Lấy thông tin sản phẩm được chọn từ localStorage
+        const storedProduct = JSON.parse(
+          localStorage.getItem("selectedProduct")
+        );
+
+        if (storedProduct && storedProduct.productId === id) {
+          const selectedVariation = storedProduct.selectedVariation;
+
+          // Kiểm tra xem biến thể được chọn có tồn tại trong danh sách biến thể đã lọc không
+          const variationExists = filteredVariations.some(
+            (v) => v._id === selectedVariation._id
+          );
+
+          if (variationExists) {
+            setSelectedColor(selectedVariation.color);
+            setSelectedRom(selectedVariation.rom);
+          } else {
+            setNoProduct(true);
+          }
+        }
       } catch (error) {
         setError(error.message);
       } finally {
@@ -52,38 +79,32 @@ export default function Product() {
 
   // Cập nhật giá khi chọn màu & ROM
   useEffect(() => {
-    if (selectedColor && selectedRom && product?.variation) {
-      // Tìm biến thể phù hợp với cả màu và ROM đã chọn
-      const variation = product.variation.find(
+    if (selectedColor && selectedRom && variations.length > 0) {
+      const variation = variations.find(
         (v) => v.color === selectedColor && v.rom === selectedRom
       );
 
       if (variation) {
+        console.log("Selected Variation:", variation);
+        console.log("Discount Info:", variation.discount);
+
         const originalPrice = variation.price;
 
-        // Tìm thông tin giảm giá từ danh sách biến thể
-        const discountInfo = variations.find(
-          (v) => v.color === selectedColor && v.rom === selectedRom
-        )?.discount;
-
-        // Kiểm tra xem giảm giá có hợp lệ không (nếu có)
         let discountAmount = 0;
-        if (discountInfo) {
+        if (variation.discount) {
           const currentDate = new Date();
-          const startDate = new Date(discountInfo.startDate);
-          const endDate = new Date(discountInfo.endDate);
+          const startDate = new Date(variation.discount.startDate);
+          const endDate = new Date(variation.discount.endDate);
 
           if (currentDate >= startDate && currentDate <= endDate) {
-            discountAmount = discountInfo.amount;
+            discountAmount = variation.discount.amount;
           }
         }
 
-        // Tính giá sau giảm
         const discountedPrice = Math.round(
           originalPrice * (1 - discountAmount / 100)
         );
 
-        // Cập nhật state giá
         setSelectedPrice({
           original: originalPrice,
           discounted: discountedPrice,
@@ -97,12 +118,9 @@ export default function Product() {
     } else {
       setNoProduct(false);
     }
-  }, [selectedColor, selectedRom, product, variations]);
-
+  }, [selectedColor, selectedRom, variations]);
   // Lấy danh sách màu duy nhất từ các biến thể của sản phẩm
-  const uniqueColors = [
-    ...new Set(product?.variation?.map((v) => v.color) || []),
-  ];
+  const uniqueColors = [...new Set(variations.map((v) => v.color) || [])];
 
   if (loading)
     return (
@@ -176,7 +194,7 @@ export default function Product() {
             </div>
 
             {/* Chọn màu */}
-            {product.variation?.length > 0 && (
+            {variations.length > 0 && (
               <div>
                 <h2 className="text-xl font-semibold">Chọn màu sắc</h2>
                 <div className="space-y-2 mt-2">
@@ -202,13 +220,13 @@ export default function Product() {
             )}
 
             {/* Chọn ROM */}
-            {product.variation?.length > 0 && selectedColor && (
+            {variations.length > 0 && selectedColor && (
               <div>
                 <h2 className="text-xl font-semibold">Chọn ROM</h2>
                 <div className="space-y-2 mt-2">
                   {[
                     ...new Set(
-                      product.variation
+                      variations
                         .filter((v) => v.color === selectedColor)
                         .map((v) => v.rom)
                     ),

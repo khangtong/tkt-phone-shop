@@ -155,21 +155,21 @@ export default function ProductDashboard() {
           <div className="overflow-x-auto">
             {loading ? (
               <p className="text-center text-gray-500">Đang tải dữ liệu...</p>
-            ) : filteredProducts.length > 0 ? (
-              <>
-                <table className="w-full border-collapse bg-white">
-                  <thead>
-                    <tr className="bg-gray-200 text-left">
-                      <th className="p-3">STT</th>
-                      <th className="p-3">Tên sản phẩm</th>
-                      <th className="p-3">Mô tả</th>
-                      <th className="p-3">Danh mục</th>
-                      <th className="p-3">Hình ảnh</th>
-                      <th className="p-3">Hành động</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {currentProducts.map((product, index) => (
+            ) : (
+              <table className="w-full border-collapse bg-white">
+                <thead>
+                  <tr className="bg-gray-200 text-left">
+                    <th className="p-3">STT</th>
+                    <th className="p-3">Tên sản phẩm</th>
+                    <th className="p-3">Mô tả</th>
+                    <th className="p-3">Danh mục</th>
+                    <th className="p-3">Hình ảnh</th>
+                    <th className="p-3">Hành động</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredProducts.length > 0 ? (
+                    currentProducts.map((product, index) => (
                       <tr key={product._id} className="border-t">
                         <td className="p-3">
                           {(currentPage - 1) * itemsPerPage + index + 1}
@@ -216,34 +216,36 @@ export default function ProductDashboard() {
                           </button>
                         </td>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-
-                <div className="flex justify-center mt-6">
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                    (page) => (
-                      <button
-                        key={page}
-                        onClick={() => goToPage(page)}
-                        className={`mx-1 px-4 py-2 rounded-lg ${
-                          currentPage === page
-                            ? "bg-blue-600 text-white"
-                            : "bg-gray-200 text-gray-700"
-                        }`}
-                      >
-                        {page}
-                      </button>
-                    )
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="6" className="text-center p-4 text-gray-500">
+                        Không tìm thấy sản phẩm nào.
+                      </td>
+                    </tr>
                   )}
-                </div>
-              </>
-            ) : (
-              <tr>
-                <td colSpan="6" className="text-center p-4 text-gray-500">
-                  Không tìm thấy sản phẩm nào.
-                </td>
-              </tr>
+                </tbody>
+              </table>
+            )}
+
+            {filteredProducts.length > 0 && (
+              <div className="flex justify-center mt-6">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                  (page) => (
+                    <button
+                      key={page}
+                      onClick={() => goToPage(page)}
+                      className={`mx-1 px-4 py-2 rounded-lg ${
+                        currentPage === page
+                          ? "bg-blue-600 text-white"
+                          : "bg-gray-200 text-gray-700"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  )
+                )}
+              </div>
             )}
           </div>
 
