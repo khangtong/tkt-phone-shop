@@ -5,6 +5,7 @@ const CategoryPage = () => {
   const { categoryName } = useParams();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [selectedVariants, setSelectedVariants] = useState({}); // State để lưu biến thể được chọn
 
   useEffect(() => {
     const fetchProductsByCategory = async () => {
@@ -57,6 +58,14 @@ const CategoryPage = () => {
     return `${rom} GB`;
   };
 
+  // Hàm xử lý khi người dùng chọn một biến thể
+  const handleVariantChange = (productId, variant) => {
+    setSelectedVariants((prev) => ({
+      ...prev,
+      [productId]: variant,
+    }));
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 p-3 rounded-xl">
       <main className="container mx-auto px-4 py-8">
@@ -69,21 +78,25 @@ const CategoryPage = () => {
               <p className="text-gray-500">Đang tải sản phẩm...</p>
             ) : products.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
-                {products.flatMap((product) =>
-                  product.variation?.map((variation) => {
-                    const hasDiscount =
-                      variation.discount?.amount > 0 &&
-                      isDiscountActive(variation.discount);
-                    const discountedPrice = hasDiscount
-                      ? calculateDiscountedPrice(
-                          variation.price,
-                          variation.discount.amount
-                        )
-                      : variation.price;
+                {products.map((product) => {
+                  const selectedVariant =
+                    selectedVariants[product._id] || product.variation[0]; // Lấy biến thể được chọn hoặc biến thể đầu tiên
+                  const hasDiscount =
+                    selectedVariant.discount?.amount > 0 &&
+                    isDiscountActive(selectedVariant.discount);
+                  const discountedPrice = hasDiscount
+                    ? calculateDiscountedPrice(
+                        selectedVariant.price,
+                        selectedVariant.discount.amount
+                      )
+                    : selectedVariant.price;
 
-                    return (
+                  return (
+                    <div
+                      key={product._id}
+                      className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-300"
+                    >
                       <Link
-                        key={variation._id}
                         to={`/product/${product._id}`}
                         onClick={() => {
                           localStorage.setItem(
@@ -92,11 +105,10 @@ const CategoryPage = () => {
                               productId: product._id,
                               productName: product.name,
                               productImage: product.image[0],
-                              selectedVariation: variation, // Lưu biến thể được chọn
+                              selectedVariation: selectedVariant, // Lưu biến thể được chọn
                             })
                           );
                         }}
-                        className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-300"
                       >
                         <div className="relative w-full h-50 overflow-hidden">
                           <img
@@ -106,41 +118,63 @@ const CategoryPage = () => {
                           />
                           {hasDiscount && (
                             <span className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded">
-                              Giảm {variation.discount.amount}%
+                              Giảm {selectedVariant.discount.amount}%
                             </span>
                           )}
                         </div>
                         <div className="p-4">
                           <h3 className="text-lg font-semibold text-gray-800 line-clamp-2">
-                            {product.name} ({variation.color}, {variation.ram}GB
-                            RAM, {formatRom(variation.rom)})
+                            {product.name} ({selectedVariant.color},{" "}
+                            {selectedVariant.ram}GB RAM,{" "}
+                            {formatRom(selectedVariant.rom)})
                           </h3>
                           <div className="mt-2">
                             {hasDiscount ? (
                               <>
                                 <span className="text-gray-500 line-through text-sm mr-2">
-                                  {formatPrice(variation.price)}
+                                  {formatPrice(selectedVariant.price)}
                                 </span>
                                 <div className="flex items-center">
                                   <span className="text-red-600 font-bold text-lg">
                                     {formatPrice(discountedPrice)}
                                   </span>
                                   <span className="ml-2 text-sm text-green-600">
-                                    (-{variation.discount.amount}%)
+                                    (-{selectedVariant.discount.amount}%)
                                   </span>
                                 </div>
                               </>
                             ) : (
                               <span className="text-red-600 font-bold text-lg">
-                                {formatPrice(variation.price)}
+                                {formatPrice(selectedVariant.price)}
                               </span>
                             )}
                           </div>
                         </div>
                       </Link>
-                    );
-                  })
-                )}
+
+                      {/* Dropdown để chọn biến thể */}
+                      <div className="p-4 mt-4">
+                        <select
+                          onChange={(e) => {
+                            const selectedVariantId = e.target.value;
+                            const selectedVariant = product.variation.find(
+                              (v) => v._id === selectedVariantId
+                            );
+                            handleVariantChange(product._id, selectedVariant);
+                          }}
+                          className="w-full p-2 border border-gray-300 rounded-lg"
+                        >
+                          {product.variation.map((variant) => (
+                            <option key={variant._id} value={variant._id}>
+                              {variant.ram}GB RAM, {formatRom(variant.rom)},{" "}
+                              {variant.color}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             ) : (
               <p className="text-gray-500">

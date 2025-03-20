@@ -388,7 +388,8 @@ const Home = () => {
                         >
                           {product.variation.map((variant) => (
                             <option key={variant._id} value={variant._id}>
-                              {variant.ram}GB RAM, {formatRom(variant.rom)}
+                              {variant.ram}GB RAM, {formatRom(variant.rom)},{" "}
+                              {variant.color}
                             </option>
                           ))}
                         </select>
