@@ -1,33 +1,34 @@
 // import { useState } from "react";
-import Header from "./components/Header";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Home from "./pages/Home";
-import Register from "./pages/Register";
-import Login from "./pages/Login";
-import Footer from "./components/Footer";
+import Header from './components/Header';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Home from './pages/Home';
+import Register from './pages/Register';
+import Login from './pages/Login';
+import Footer from './components/Footer';
 UpdateProduct;
-import Order from "./pages/Order";
-import Profile from "./pages/Profile";
-import ProductDashboard from "./components/dashboard/Product/ProductDashboard";
+import Order from './pages/Order';
+import Profile from './pages/Profile';
+import ProductDashboard from './components/dashboard/Product/ProductDashboard';
 
-import { AdminRoute } from "./components/PrivateRoute";
-import CreateProduct from "./components/dashboard/Product/CreateProduct";
-import Product from "./pages/Product";
-import CategoryDashboard from "./components/dashboard/Category/CategoryDashboard";
-import UpdateProduct from "./components/dashboard/Product/UpdateProduct";
-import UpdateVariation from "./components/dashboard/Variation/UpdateVariation";
-import CreateVariation from "./components/dashboard/Variation/CreateVariation";
-import VariationDashboard from "./components/dashboard/Variation/VariationDashboard";
-import CreateCategory from "./components/dashboard/Category/CreateCategory";
-import UpdateCategory from "./components/dashboard/Category/UpdateCategory";
-import ForgotPassword from "./pages/ForgotPassword";
-import ResetPassword from "./pages/ResetPassword";
-import CreateDiscount from "./components/dashboard/Discount/CreateDiscount";
-import DiscountDashboard from "./components/dashboard/Discount/DiscountDashboard";
-import UpdateDiscount from "./components/dashboard/Discount/UpdateDiscount";
-import AddToVariationDashboard from "./components/dashboard/Discount/AddToVariationDashboard";
-import AddToVariation from "./components/dashboard/Discount/AddToVariation";
-import CategoryPage from "./components/CategoryPage";
+import { AdminRoute } from './components/PrivateRoute';
+import CreateProduct from './components/dashboard/Product/CreateProduct';
+import Product from './pages/Product';
+import CategoryDashboard from './components/dashboard/Category/CategoryDashboard';
+import UpdateProduct from './components/dashboard/Product/UpdateProduct';
+import UpdateVariation from './components/dashboard/Variation/UpdateVariation';
+import CreateVariation from './components/dashboard/Variation/CreateVariation';
+import VariationDashboard from './components/dashboard/Variation/VariationDashboard';
+import CreateCategory from './components/dashboard/Category/CreateCategory';
+import UpdateCategory from './components/dashboard/Category/UpdateCategory';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
+import CreateDiscount from './components/dashboard/Discount/CreateDiscount';
+import DiscountDashboard from './components/dashboard/Discount/DiscountDashboard';
+import UpdateDiscount from './components/dashboard/Discount/UpdateDiscount';
+import AddToVariationDashboard from './components/dashboard/Discount/AddToVariationDashboard';
+import AddToVariation from './components/dashboard/Discount/AddToVariation';
+import CategoryPage from './components/CategoryPage';
+import Cart from './pages/Cart';
 
 function App() {
   return (
@@ -43,6 +44,7 @@ function App() {
         <Route path="/product/:id" element={<Product />} />
         <Route path="/profile/order" element={<Order />} />
         <Route path="/category/:categoryName" element={<CategoryPage />} />
+        <Route path="/cart" element={<Cart />} />
         <Route element={<AdminRoute />}>
           <Route
             path="/admin/dashboard/product"

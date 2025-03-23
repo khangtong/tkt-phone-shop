@@ -28,7 +28,7 @@ app.use('/api/orders', orderRoute);
 app.use('/api/order-details', orderDetailRoute);
 
 app.get('/', (req, res) => {
-	res.send('Hello World!');
+  res.send('Hello World!');
 });
 
 export default app;

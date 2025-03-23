@@ -1,6 +1,8 @@
-import React, { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
-import { FaArrowLeft } from "react-icons/fa";
+import React, { useEffect, useState } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import { FaArrowLeft } from 'react-icons/fa';
+import { useDispatch } from 'react-redux';
+import { setCart } from '../redux/cart/cartSlice';
 
 export default function Product() {
   const { id } = useParams();
@@ -13,6 +15,7 @@ export default function Product() {
   const [selectedRom, setSelectedRom] = useState(null);
   const [selectedPrice, setSelectedPrice] = useState(null);
   const [noProduct, setNoProduct] = useState(false);
+  const dispatch = useDispatch();
 
   // Hàm hỗ trợ chuyển đổi ROM
   const formatRom = (rom) => {
@@ -30,14 +33,14 @@ export default function Product() {
 
         // Fetch thông tin sản phẩm
         const productRes = await fetch(`/api/products/${id}`);
-        if (!productRes.ok) throw new Error("Không thể lấy thông tin sản phẩm");
+        if (!productRes.ok) throw new Error('Không thể lấy thông tin sản phẩm');
         const productData = await productRes.json();
         setProduct(productData);
 
         // Fetch danh sách biến thể
         const variationsRes = await fetch(`/api/variations`);
         if (!variationsRes.ok)
-          throw new Error("Không thể lấy thông tin biến thể");
+          throw new Error('Không thể lấy thông tin biến thể');
         const variationsData = await variationsRes.json();
 
         // Lọc biến thể theo productId
@@ -49,7 +52,7 @@ export default function Product() {
 
         // Lấy thông tin sản phẩm được chọn từ localStorage
         const storedProduct = JSON.parse(
-          localStorage.getItem("selectedProduct")
+          localStorage.getItem('selectedProduct')
         );
 
         if (storedProduct && storedProduct.productId === id) {
@@ -85,8 +88,8 @@ export default function Product() {
       );
 
       if (variation) {
-        console.log("Selected Variation:", variation);
-        console.log("Discount Info:", variation.discount);
+        console.log('Selected Variation:', variation);
+        console.log('Discount Info:', variation.discount);
 
         const originalPrice = variation.price;
 
@@ -134,6 +137,34 @@ export default function Product() {
       <p className="text-center text-gray-500">Không tìm thấy sản phẩm.</p>
     );
 
+  async function handleAddToCart() {
+    const variation = variations.find(
+      (v) => v.color === selectedColor && v.rom === selectedRom
+    );
+    if (variation && selectedPrice) {
+      // Set the price to the discounted price before adding to cart
+      variation.price = selectedPrice.discounted;
+    }
+
+    const res = await fetch(`/api/carts/my-cart`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+      },
+      body: JSON.stringify(variation),
+    });
+
+    if (res.ok) {
+      // Assume the response returns the updated cart after addition
+      const updatedCart = await res.json();
+      // Dispatch the updated cart to update global state and sync the Header cart quantity
+      dispatch(setCart(updatedCart));
+    } else {
+      console.error('Failed to add product to cart');
+    }
+  }
+
   return (
     <div className="p-8 bg-gray-100 min-h-screen">
       <Link
@@ -170,8 +201,8 @@ export default function Product() {
                     key={index}
                     className={`w-16 h-16 overflow-hidden rounded-lg cursor-pointer border-2 ${
                       selectedImage === index
-                        ? "border-blue-500"
-                        : "border-gray-300"
+                        ? 'border-blue-500'
+                        : 'border-gray-300'
                     }`}
                     onClick={() => setSelectedImage(index)}
                   >
@@ -231,7 +262,7 @@ export default function Product() {
                         .map((v) => v.rom)
                     ),
                   ]
-                    .sort((a, b) => a - b) // Sắp xếp ROM từ thấp đến cao
+                    .sort((a, b) => a - b)
                     .map((rom, index) => (
                       <label
                         key={index}
@@ -244,8 +275,7 @@ export default function Product() {
                           onChange={() => setSelectedRom(rom)}
                           className="form-radio h-5 w-5 text-blue-600"
                         />
-                        <span className="text-gray-700">{formatRom(rom)}</span>{" "}
-                        {/* Sử dụng hàm formatRom */}
+                        <span className="text-gray-700">{formatRom(rom)}</span>
                       </label>
                     ))}
                 </div>
@@ -260,7 +290,7 @@ export default function Product() {
             {selectedPrice && (
               <div className="mt-4">
                 <h2 className="text-xl font-semibold">
-                  Giá:{" "}
+                  Giá:{' '}
                   <span className="text-red-500 font-bold">
                     {selectedPrice.discounted.toLocaleString()} VNĐ
                   </span>
@@ -274,7 +304,7 @@ export default function Product() {
                       </span>
                     </>
                   ) : (
-                    ""
+                    ''
                   )}
                 </h2>
               </div>
@@ -282,7 +312,10 @@ export default function Product() {
 
             {/* Nút thao tác */}
             <div className="flex space-x-4 mt-6">
-              <button className="bg-blue-600 text-white px-6 py-3 rounded-lg shadow hover:bg-blue-700">
+              <button
+                onClick={handleAddToCart}
+                className="bg-blue-600 text-white px-6 py-3 rounded-lg shadow hover:bg-blue-700"
+              >
                 Thêm vào giỏ hàng
               </button>
               <button className="bg-red-600 text-white px-6 py-3 rounded-lg shadow hover:bg-red-700">
