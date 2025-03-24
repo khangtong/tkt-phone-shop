@@ -23,7 +23,7 @@ const Profile = () => {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
 
-  // Fetch user data khi component mount
+  // Chỉ lấy các trường cần thiết cho form, không bao gồm role
   useEffect(() => {
     if (currentUser) {
       setFormData({
@@ -42,12 +42,10 @@ const Profile = () => {
     }
   }, [showToast]);
 
-  // Xử lý thay đổi input
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // Xử lý submit form
   const handleSubmit = async (e) => {
     e.preventDefault();
     dispatch(updateUserStart());
@@ -58,14 +56,26 @@ const Profile = () => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
-        body: JSON.stringify(formData),
+        // Chỉ gửi các trường được phép cập nhật, không gửi role
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          address: formData.address,
+        }),
       });
 
       const data = await res.json();
-      console.log(data);
       if (!res.ok) throw new Error(data.message || "Cập nhật thất bại");
 
-      dispatch(updateUserSuccess(data.user));
+      // Cập nhật thông tin user nhưng giữ nguyên role
+      dispatch(
+        updateUserSuccess({
+          ...data.user,
+          role: currentUser.role, // Giữ nguyên role hiện tại
+        })
+      );
+
       setToastMessage("Cập nhật thành công!");
       setShowToast(true);
     } catch (error) {
@@ -77,7 +87,7 @@ const Profile = () => {
 
   return (
     <div className="max-w-sm mx-auto mt-10">
-      {/* Hiển thị Toast thông báo */}
+      {/* Toast thông báo */}
       {showToast && (
         <div className="fixed top-0 left-1/2 -translate-x-1/2 mt-5 z-50">
           <Toast>
@@ -95,7 +105,6 @@ const Profile = () => {
               )}
             </div>
             <div className="ml-3 text-sm font-normal">{toastMessage}</div>
-            <Toast.Toggle />
           </Toast>
         </div>
       )}
@@ -104,7 +113,9 @@ const Profile = () => {
         <RxAvatar className="w-20 h-20 text-gray-500" />
         <h1 className="text-3xl font-semibold mt-2">Thông tin cá nhân</h1>
       </div>
+
       <form onSubmit={handleSubmit} className="max-w-sm mx-auto space-y-4">
+        {/* Các trường form giữ nguyên */}
         <div>
           <label className="block mb-1 text-sm font-medium text-gray-700">
             Họ và tên
@@ -126,8 +137,8 @@ const Profile = () => {
             type="email"
             name="email"
             value={formData.email}
-            className="w-full p-2 border rounded-lg"
             onChange={handleChange}
+            className="w-full p-2 border rounded-lg"
           />
         </div>
 
@@ -159,8 +170,10 @@ const Profile = () => {
 
         <button
           type="submit"
-          className="w-full p-2 text-white bg-blue-600 hover:bg-blue-700 rounded-lg"
           disabled={loading}
+          className={`w-full p-2 text-white rounded-lg ${
+            loading ? "bg-blue-400" : "bg-blue-600 hover:bg-blue-700"
+          }`}
         >
           {loading ? "Đang cập nhật..." : "Lưu thay đổi"}
         </button>

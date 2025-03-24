@@ -1,169 +1,198 @@
-import React, { useState, useEffect } from 'react';
-import { FaTrash, FaShoppingCart } from 'react-icons/fa';
-import { useDispatch } from 'react-redux';
-import { setCart } from '../redux/cart/cartSlice';
+import { useState, useEffect } from "react";
+import { FaTrash, FaShoppingCart } from "react-icons/fa";
+import { useDispatch, useSelector } from "react-redux";
+import { setCart } from "../redux/cart/cartSlice";
+import { Navigate } from "react-router-dom";
 
 export default function Cart() {
-  const [cart, setLocalCart] = useState(null);
-  const [cartItems, setCartItems] = useState([]);
+  const dispatch = useDispatch();
+  const globalCart = useSelector((state) => state.cart);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const dispatch = useDispatch();
+  const [isUpdating, setIsUpdating] = useState(false);
 
-  // Helper function for formatting prices
-  function formatPrice(price) {
+  // Format price (VND)
+  const formatPrice = (price) => {
     const numberPrice = Number(price);
-    if (Number.isNaN(numberPrice)) return price;
-    return numberPrice.toLocaleString('vi-VN', {
-      style: 'currency',
-      currency: 'VND',
+    if (Number.isNaN(numberPrice)) return "0 ₫";
+    return numberPrice.toLocaleString("vi-VN", {
+      style: "currency",
+      currency: "VND",
       maximumFractionDigits: 0,
     });
-  }
+  };
 
-  useEffect(() => {
-    const fetchCartData = async () => {
-      try {
-        const response = await fetch('/api/carts/my-cart', {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          },
-        });
-        if (!response.ok) {
-          if (response.status === 404) {
-            await fetch('/api/carts', {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`,
-              },
-            });
-            setCartItems([]);
-          } else throw new Error('Failed to fetch cart data');
+  // Fetch cart data
+  const fetchCartData = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setError(null);
+      const response = await fetch("/api/carts/my-cart", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          // Create new cart if not exists
+          const createResponse = await fetch("/api/carts", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
+          if (!createResponse.ok) {
+            throw new Error("Failed to create new cart");
+          }
+
+          dispatch(setCart({ items: [], totalPrice: 0, totalQuantity: 0 }));
+        } else {
+          throw new Error("Failed to fetch cart data");
         }
+      } else {
         const data = await response.json();
-        console.log(data);
-        // Ensure each cart item has a quantity value (default to 1)
-        const itemsWithQuantity = data.variation.map((item) => ({
+        const itemsWithQuantity = (data.variation || []).map((item) => ({
           ...item,
           quantity: item.quantity || 1,
         }));
-        setLocalCart(data);
-        setCartItems(itemsWithQuantity);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
+
+        const updatedCart = {
+          items: itemsWithQuantity,
+          totalPrice: data.totalPrice || 0,
+          totalQuantity:
+            data.totalQuantity ||
+            itemsWithQuantity.reduce(
+              (sum, item) => sum + (item.quantity || 1),
+              0
+            ),
+        };
+
+        dispatch(setCart(updatedCart));
       }
-    };
-
-    fetchCartData();
-  }, []);
-
-  async function updateCart(updatedCart) {
-    try {
-      const response = await fetch('/api/carts/my-cart', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify(updatedCart),
-      });
-      if (!response.ok) throw new Error('Failed to update cart');
     } catch (err) {
       setError(err.message);
-      // Re-fetch cart data to restore valid state
-      const response = await fetch('/api/carts/my-cart', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-      if (response.ok) {
-        const freshData = await response.json();
-        const itemsWithQuantity = freshData.variation.map((item) => ({
-          ...item,
-          quantity: item.quantity || 1,
-        }));
-        setLocalCart(freshData);
-        setCartItems(itemsWithQuantity);
-      }
+      dispatch(setCart({ items: [], totalPrice: 0, totalQuantity: 0 }));
+    } finally {
+      setLoading(false);
     }
-  }
+  };
 
-  // Helper: recalc the total price and total quantity from updated items
-  function recalcCart(items) {
-    const totalQuantity = items.reduce(
-      (acc, item) => acc + (item.quantity || 1),
-      0
+  // Fetch cart data on mount
+  useEffect(() => {
+    fetchCartData();
+  }, [dispatch]);
+
+  // Update cart on server and then reload data
+  const updateCartAndReload = async (updatedItems) => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    try {
+      setIsUpdating(true);
+      setError(null);
+
+      // Calculate totals
+      const totalQuantity = updatedItems.reduce(
+        (sum, item) => sum + (item.quantity || 1),
+        0
+      );
+      const totalPrice = updatedItems.reduce((total, item) => {
+        const price =
+          item.discount && new Date(item.discount.endDate) > new Date()
+            ? item.price * (1 - item.discount.amount / 100)
+            : item.price;
+        return total + price * (item.quantity || 1);
+      }, 0);
+
+      // Send update to server
+      const response = await fetch("/api/carts/my-cart", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          variation: updatedItems,
+          totalPrice,
+          totalQuantity,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update cart");
+      }
+
+      // Reload cart data from server after successful update
+      await fetchCartData();
+    } catch (err) {
+      setError(err.message);
+      // Try to reload cart data to recover
+      await fetchCartData();
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  // Handle quantity changes
+  const handleQuantityChange = (itemId, newQuantity) => {
+    if (isUpdating) return;
+
+    // Validate quantity (1-99)
+    const validatedQuantity = Math.max(1, Math.min(99, newQuantity));
+
+    const updatedItems = globalCart.items.map((item) =>
+      item._id === itemId ? { ...item, quantity: validatedQuantity } : item
     );
-    const totalPrice = items.reduce((acc, item) => {
-      const quantity = item.quantity || 1;
-      const effectivePrice =
-        item.discount && Date.now() <= Date.parse(item.discount.endDate)
-          ? +(item.price * (1 - item.discount.amount / 100)).toFixed(0)
-          : item.price;
-      return acc + effectivePrice * quantity;
-    }, 0);
-    return { ...cart, variation: items, totalPrice, totalQuantity };
-  }
 
-  // Helper: update item quantity and recalc totals
-  function updateItemQuantity(itemId, newQuantity) {
-    let newCartItems = cartItems
-      .map((item) => {
-        if (item._id === itemId) {
-          return { ...item, quantity: newQuantity };
-        }
-        return item;
-      })
-      // Remove items with 0 or less quantity
-      .filter((item) => item.quantity > 0);
+    updateCartAndReload(updatedItems);
+  };
 
-    const updatedCart = recalcCart(newCartItems);
-    setLocalCart(updatedCart);
-    setCartItems(newCartItems);
-    dispatch(setCart(updatedCart)); // Update global cart state
-    updateCart(updatedCart);
-  }
+  // Handle remove item
+  const handleRemove = (itemId) => {
+    if (isUpdating) return;
 
-  function handleIncrement(itemId) {
-    const item = cartItems.find((item) => item._id === itemId);
-    const currentQuantity = item.quantity || 1;
-    updateItemQuantity(itemId, currentQuantity + 1);
-  }
+    const updatedItems = globalCart.items.filter((item) => item._id !== itemId);
+    updateCartAndReload(updatedItems);
+  };
 
-  function handleDecrement(itemId) {
-    const item = cartItems.find((item) => item._id === itemId);
-    const currentQuantity = item.quantity || 1;
-    updateItemQuantity(itemId, currentQuantity - 1);
-  }
-
-  function handleRemove(itemId) {
-    const newCartItems = cartItems.filter((item) => item._id !== itemId);
-    const updatedCart = recalcCart(newCartItems);
-    setLocalCart(updatedCart);
-    setCartItems(newCartItems);
-    dispatch(setCart(updatedCart)); // Update global cart state
-    updateCart(updatedCart);
+  // Redirect if not logged in
+  if (!localStorage.getItem("token")) {
+    return <Navigate to="/login" replace />;
   }
 
   if (loading) return <div className="text-center py-20">Loading cart...</div>;
-  if (error)
+  if (error) {
     return <div className="text-center py-20 text-red-500">Error: {error}</div>;
+  }
 
   return (
     <div className="max-w-4xl mx-auto p-4">
       <h1 className="text-2xl font-bold mb-6">Giỏ hàng của bạn</h1>
 
-      {cartItems.length > 0 ? (
+      {isUpdating && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-4 rounded-lg">
+            <p>Đang cập nhật giỏ hàng...</p>
+          </div>
+        </div>
+      )}
+
+      {globalCart.items?.length > 0 ? (
         <>
           <div className="space-y-4">
-            {cartItems.map((item) => {
-              const currentDate = new Date();
+            {globalCart.items.map((item) => {
               const discountValid =
                 item.discount &&
-                currentDate >= new Date(item.discount.startDate) &&
-                currentDate <= new Date(item.discount.endDate);
+                new Date(item.discount.startDate) <= new Date() &&
+                new Date(item.discount.endDate) >= new Date();
+
               const discountedPrice = discountValid
                 ? Math.round(item.price * (1 - item.discount.amount / 100))
                 : null;
@@ -171,13 +200,18 @@ export default function Cart() {
               return (
                 <div key={item._id} className="flex items-center border-b pb-4">
                   <img
-                    src={item.product.image[0]}
-                    alt={item.product.name}
+                    src={item.product?.image?.[0] || "/placeholder-product.jpg"}
+                    alt={item.product?.name || "Sản phẩm"}
                     className="w-20 h-20 object-cover rounded-lg mr-4"
+                    onError={(e) => {
+                      e.target.src = "/placeholder-product.jpg";
+                    }}
                   />
 
                   <div className="flex-1">
-                    <h2 className="font-medium">{item.product.name}</h2>
+                    <h2 className="font-medium">
+                      {item.product?.name || "Sản phẩm"}
+                    </h2>
                     {discountValid ? (
                       <div>
                         <p className="text-red-500 font-bold">
@@ -198,23 +232,36 @@ export default function Cart() {
                   <div className="flex items-center space-x-4">
                     <div className="flex items-center border rounded">
                       <button
-                        className="px-3 py-1 hover:bg-gray-100"
-                        onClick={() => handleDecrement(item._id)}
+                        className="px-3 py-1 hover:bg-gray-100 disabled:opacity-50"
+                        onClick={() =>
+                          handleQuantityChange(
+                            item._id,
+                            (item.quantity || 1) - 1
+                          )
+                        }
+                        disabled={isUpdating || (item.quantity || 1) <= 1}
                       >
                         -
                       </button>
                       <span className="px-3">{item.quantity || 1}</span>
                       <button
-                        className="px-3 py-1 hover:bg-gray-100"
-                        onClick={() => handleIncrement(item._id)}
+                        className="px-3 py-1 hover:bg-gray-100 disabled:opacity-50"
+                        onClick={() =>
+                          handleQuantityChange(
+                            item._id,
+                            (item.quantity || 1) + 1
+                          )
+                        }
+                        disabled={isUpdating || (item.quantity || 1) >= 99}
                       >
                         +
                       </button>
                     </div>
 
                     <button
-                      className="text-red-500 hover:text-red-700"
+                      className="text-red-500 hover:text-red-700 disabled:opacity-50"
                       onClick={() => handleRemove(item._id)}
+                      disabled={isUpdating}
                     >
                       <FaTrash />
                     </button>
@@ -227,10 +274,15 @@ export default function Cart() {
           <div className="mt-8 p-6 bg-gray-50 rounded-lg">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-medium">Tổng tiền</h2>
-              <p className="text-gray-600">{formatPrice(cart.totalPrice)}</p>
+              <p className="text-gray-600">
+                {formatPrice(globalCart.totalPrice || 0)}
+              </p>
             </div>
 
-            <button className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors">
+            <button
+              className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+              disabled={isUpdating || globalCart.items.length === 0}
+            >
               Thanh toán
             </button>
           </div>
@@ -244,12 +296,6 @@ export default function Cart() {
           <p className="text-gray-600 mb-6">
             Hãy thêm sản phẩm vào giỏ hàng để tiếp tục
           </p>
-          <a
-            href="/"
-            className="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            Mua sắm ngay
-          </a>
         </div>
       )}
     </div>
