@@ -6,7 +6,17 @@ const cartDetailSchema = new mongoose.Schema({
 		ref: 'cart',
 		required: true,
 	},
+	variation: {
+		type: mongoose.Schema.Types.ObjectId,
+		ref: 'variation',
+		required: true,
+	},
+	quantity: {
+		type: Number,
+		required: true,
+		default: 1,
+	},
 });
 
-const cartModel = mongoose.model('cart', cartDetailSchema);
-export default cartModel;
+const cartDetailModel = mongoose.model('cartDetail', cartDetailSchema);
+export default cartDetailModel;

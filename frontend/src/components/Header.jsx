@@ -1,15 +1,18 @@
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { RxAvatar } from 'react-icons/rx';
-import { FiShoppingCart } from 'react-icons/fi';
-import { GrSearch } from 'react-icons/gr';
-import { useDispatch, useSelector } from 'react-redux';
-import { useState, useRef, useEffect } from 'react';
-import { logout } from '../redux/user/userSlice';
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { RxAvatar } from "react-icons/rx";
+import { FiShoppingCart } from "react-icons/fi";
+import { GrSearch } from "react-icons/gr";
+import { useDispatch, useSelector } from "react-redux";
+import { useState, useRef, useEffect } from "react";
+import { logout } from "../redux/user/userSlice";
+import { clearCart } from "../redux/cart/cartSlice";
+import { Toast } from "flowbite-react";
 
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const { currentUser } = useSelector((state) => state.user);
-  const { cartQuantity } = useSelector((state) => state.cart);
+  const { totalQuantity: cartQuantity = 0 } =
+    useSelector((state) => state.cart) || {};
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const dropdownRef = useRef(null);
@@ -23,9 +26,9 @@ export default function Header() {
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
@@ -36,7 +39,10 @@ export default function Header() {
 
   const handleLogout = () => {
     dispatch(logout());
-    navigate('/');
+    dispatch(clearCart()); // Thêm dòng này
+    localStorage.removeItem("token"); // Thêm dòng này
+    Toast.success("Đã đăng xuất thành công!");
+    navigate("/");
   };
 
   return (
@@ -59,7 +65,7 @@ export default function Header() {
           <button className="text-base min-w-[80px] h-8 bg-blue-600 flex items-center justify-center rounded-r-md text-white">
             <GrSearch />
             <span className="text-xs sm:text-xs hidden sm:inline">
-              {' '}
+              {" "}
               Tìm kiếm
             </span>
           </button>
@@ -86,7 +92,7 @@ export default function Header() {
               {/* Dropdown */}
               {isOpen && (
                 <div className="absolute right-0 mt-2 w-44 bg-white border rounded-lg shadow-md">
-                  {currentUser.role === 'USER' ? (
+                  {currentUser.role === "USER" ? (
                     <ul className="py-2 text-sm text-gray-700">
                       <li>
                         <Link

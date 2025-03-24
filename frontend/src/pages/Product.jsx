@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { FaArrowLeft } from 'react-icons/fa';
-import { useDispatch } from 'react-redux';
-import { setCart } from '../redux/cart/cartSlice';
+import { useEffect, useState } from "react";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import { FaArrowLeft } from "react-icons/fa";
+import { useDispatch } from "react-redux";
+import { setCart } from "../redux/cart/cartSlice";
 
 export default function Product() {
   const { id } = useParams();
@@ -16,6 +16,7 @@ export default function Product() {
   const [selectedPrice, setSelectedPrice] = useState(null);
   const [noProduct, setNoProduct] = useState(false);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   // Hàm hỗ trợ chuyển đổi ROM
   const formatRom = (rom) => {
@@ -23,6 +24,14 @@ export default function Product() {
       return `${(rom / 1024).toFixed(0)} TB`;
     }
     return `${rom} GB`;
+  };
+
+  // Format giá tiền
+  const formatPrice = (price) => {
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
+    }).format(price);
   };
 
   // Fetch dữ liệu sản phẩm và biến thể
@@ -33,14 +42,14 @@ export default function Product() {
 
         // Fetch thông tin sản phẩm
         const productRes = await fetch(`/api/products/${id}`);
-        if (!productRes.ok) throw new Error('Không thể lấy thông tin sản phẩm');
+        if (!productRes.ok) throw new Error("Không thể lấy thông tin sản phẩm");
         const productData = await productRes.json();
         setProduct(productData);
 
         // Fetch danh sách biến thể
         const variationsRes = await fetch(`/api/variations`);
         if (!variationsRes.ok)
-          throw new Error('Không thể lấy thông tin biến thể');
+          throw new Error("Không thể lấy thông tin biến thể");
         const variationsData = await variationsRes.json();
 
         // Lọc biến thể theo productId
@@ -52,7 +61,7 @@ export default function Product() {
 
         // Lấy thông tin sản phẩm được chọn từ localStorage
         const storedProduct = JSON.parse(
-          localStorage.getItem('selectedProduct')
+          localStorage.getItem("selectedProduct")
         );
 
         if (storedProduct && storedProduct.productId === id) {
@@ -88,9 +97,6 @@ export default function Product() {
       );
 
       if (variation) {
-        console.log('Selected Variation:', variation);
-        console.log('Discount Info:', variation.discount);
-
         const originalPrice = variation.price;
 
         let discountAmount = 0;
@@ -122,8 +128,58 @@ export default function Product() {
       setNoProduct(false);
     }
   }, [selectedColor, selectedRom, variations]);
+
   // Lấy danh sách màu duy nhất từ các biến thể của sản phẩm
   const uniqueColors = [...new Set(variations.map((v) => v.color) || [])];
+
+  async function handleAddToCart() {
+    // Kiểm tra đăng nhập
+    if (!localStorage.getItem("token")) {
+      // Lưu URL hiện tại để quay lại sau khi đăng nhập
+      localStorage.setItem("redirectUrl", window.location.pathname);
+      navigate("/login");
+      return;
+    }
+
+    const variation = variations.find(
+      (v) => v.color === selectedColor && v.rom === selectedRom
+    );
+
+    if (!variation || !selectedPrice) {
+      alert("Vui lòng chọn đầy đủ thông tin sản phẩm");
+      return;
+    }
+
+    // Tạo bản sao của variation để không ảnh hưởng đến state gốc
+    const variationToAdd = {
+      ...variation,
+      price: selectedPrice.discounted,
+      quantity: 1,
+    };
+
+    try {
+      const res = await fetch(`/api/carts/my-cart`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify(variationToAdd),
+      });
+
+      if (res.ok) {
+        const updatedCart = await res.json();
+        dispatch(setCart(updatedCart));
+        alert("Đã thêm sản phẩm vào giỏ hàng!");
+      } else {
+        const errorData = await res.json();
+        alert(`Lỗi: ${errorData.message || "Không thể thêm vào giỏ hàng"}`);
+      }
+    } catch (error) {
+      console.error("Lỗi kết nối:", error);
+      alert("Lỗi kết nối, vui lòng thử lại sau");
+    }
+  }
 
   if (loading)
     return (
@@ -136,34 +192,6 @@ export default function Product() {
     return (
       <p className="text-center text-gray-500">Không tìm thấy sản phẩm.</p>
     );
-
-  async function handleAddToCart() {
-    const variation = variations.find(
-      (v) => v.color === selectedColor && v.rom === selectedRom
-    );
-    if (variation && selectedPrice) {
-      // Set the price to the discounted price before adding to cart
-      variation.price = selectedPrice.discounted;
-    }
-
-    const res = await fetch(`/api/carts/my-cart`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-      },
-      body: JSON.stringify(variation),
-    });
-
-    if (res.ok) {
-      // Assume the response returns the updated cart after addition
-      const updatedCart = await res.json();
-      // Dispatch the updated cart to update global state and sync the Header cart quantity
-      dispatch(setCart(updatedCart));
-    } else {
-      console.error('Failed to add product to cart');
-    }
-  }
 
   return (
     <div className="p-8 bg-gray-100 min-h-screen">
@@ -201,8 +229,8 @@ export default function Product() {
                     key={index}
                     className={`w-16 h-16 overflow-hidden rounded-lg cursor-pointer border-2 ${
                       selectedImage === index
-                        ? 'border-blue-500'
-                        : 'border-gray-300'
+                        ? "border-blue-500"
+                        : "border-gray-300"
                     }`}
                     onClick={() => setSelectedImage(index)}
                   >
@@ -290,21 +318,21 @@ export default function Product() {
             {selectedPrice && (
               <div className="mt-4">
                 <h2 className="text-xl font-semibold">
-                  Giá:{' '}
+                  Giá:{" "}
                   <span className="text-red-500 font-bold">
-                    {selectedPrice.discounted.toLocaleString()} VNĐ
+                    {formatPrice(selectedPrice.discounted)}
                   </span>
                   {selectedPrice.discountPercent > 0 ? (
                     <>
                       <span className="text-gray-500 line-through ml-2">
-                        {selectedPrice.original.toLocaleString()} VNĐ
+                        {formatPrice(selectedPrice.original)}
                       </span>
                       <span className="bg-red-500 text-white text-xs px-2 py-1 rounded ml-2">
                         Giảm {selectedPrice.discountPercent}%
                       </span>
                     </>
                   ) : (
-                    ''
+                    ""
                   )}
                 </h2>
               </div>
@@ -314,11 +342,19 @@ export default function Product() {
             <div className="flex space-x-4 mt-6">
               <button
                 onClick={handleAddToCart}
-                className="bg-blue-600 text-white px-6 py-3 rounded-lg shadow hover:bg-blue-700"
+                disabled={!selectedColor || !selectedRom || noProduct}
+                className={`px-6 py-3 rounded-lg shadow ${
+                  !selectedColor || !selectedRom || noProduct
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-blue-600 hover:bg-blue-700 text-white"
+                }`}
               >
                 Thêm vào giỏ hàng
               </button>
-              <button className="bg-red-600 text-white px-6 py-3 rounded-lg shadow hover:bg-red-700">
+              <button
+                className="bg-red-600 text-white px-6 py-3 rounded-lg shadow hover:bg-red-700"
+                disabled={!selectedColor || !selectedRom || noProduct}
+              >
                 Mua ngay
               </button>
             </div>
