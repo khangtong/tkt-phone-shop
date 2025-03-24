@@ -115,6 +115,12 @@ export default function Header() {
                     <ul className="py-2 text-sm text-gray-700">
                       <li>
                         <Link
+                          to="/admin/dashboard/order"
+                          className="block px-4 py-2 hover:bg-gray-100"
+                        >
+                          Quản lý đơn hàng
+                        </Link>
+                        <Link
                           to="/admin/dashboard/product"
                           className="block px-4 py-2 hover:bg-gray-100"
                         >

@@ -79,7 +79,9 @@ export default function Login() {
           localStorage.removeItem("redirectUrl");
           navigate(redirectUrl);
         } else {
-          navigate(data.user.role === "ADMIN" ? "/admin/dashboard" : "/");
+          navigate(
+            data.user.role === "ADMIN" ? "/admin/dashboard/product" : "/"
+          );
         }
       }, 1000);
     } catch (error) {

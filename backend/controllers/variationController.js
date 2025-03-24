@@ -36,7 +36,7 @@ export const getAllVariations = async (req, res) => {
     const variations = await Variation.find()
 
       .populate("product", "name image") // Chỉ lấy trường "name" của product
-      .populate("discount", "amount startDate endDate"); // Chỉ lấy các trường cần thiết của discount
+      .populate("discount"); // Chỉ lấy các trường cần thiết của discount
 
     res.status(200).json(variations);
   } catch (error) {

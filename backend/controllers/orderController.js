@@ -71,26 +71,26 @@ export const getUserOrders = async (req, res) => {
   }
 };
 
-// //  Cập nhật trạng thái đơn hàng (Admin)
-// export const updateOrderStatus = async (req, res) => {
-//   try {
-//     const { status } = req.body;
-//     const { id } = req.params;
+//  Cập nhật trạng thái đơn hàng (Admin)
+export const updateOrderStatus = async (req, res) => {
+  try {
+    const { status } = req.body;
+    const { id } = req.params;
 
-//     const updatedOrder = await Order.findByIdAndUpdate(
-//       id,
-//       { status },
-//       { new: true }
-//     );
+    const updatedOrder = await Order.findByIdAndUpdate(
+      id,
+      { status },
+      { new: true }
+    );
 
-//     if (!updatedOrder)
-//       return res.status(404).json({ message: "Order not found" });
+    if (!updatedOrder)
+      return res.status(404).json({ message: "Order not found" });
 
-//     res.status(200).json(updatedOrder);
-//   } catch (error) {
-//     res.status(500).json({ message: error.message });
-//   }
-// };
+    res.status(200).json(updatedOrder);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 
 //  Xóa đơn hàng (Admin)
 export const deleteOrder = async (req, res) => {
