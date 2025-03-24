@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
-import hinh1 from "../assets/banner/hinh1.jpg";
+import hinh1 from "../assets/banner/hinh1.png";
 import hinh2 from "../assets/banner/hinh2.webp";
 import hinh3 from "../assets/banner/hinh3.webp";
+import hinh4 from "../assets/banner/hinh4.webp";
 const Home = () => {
   const [categories, setCategories] = useState([]);
   const [variations, setVariations] = useState([]);
@@ -17,7 +18,7 @@ const Home = () => {
 
   //img
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
-  const banners = [hinh1, hinh2, hinh3];
+  const banners = [hinh1, hinh2, hinh3, hinh4];
   const bannerIntervalRef = useRef();
 
   useEffect(() => {
@@ -221,9 +222,8 @@ const Home = () => {
       </header>
 
       {/* Banner với kích thước full khung hình */}
-      <section className="mb-8 rounded-lg overflow-hidden relative group">
-        <div className="relative w-full h-[180px] md:h-[340px] overflow-hidden">
-          {" "}
+      <section className="mb-8 rounded-lg overflow-hidden relative group w-full h-[340px]">
+        <div className="relative w-full h-full">
           <img
             src={banners[currentBannerIndex]}
             alt={`Banner ${currentBannerIndex + 1}`}
@@ -394,7 +394,10 @@ const Home = () => {
             className="bg-white shadow-md p-4 rounded-lg mb-8"
           >
             <div className="uppercase pt-2 pl-2 text-decoration-line: font-weight: 800 underline pb-3 text-blue-700">
-              <span>{categoryName} đáng mua nhất </span>
+              <Link to={`/category/${categoryName}`}>
+                {" "}
+                <span>{categoryName} đáng mua nhất </span>
+              </Link>
             </div>
             <div className="container mx-auto px-4 py-4 relative bg-slate-100 rounded-lg">
               <nav
