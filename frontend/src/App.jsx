@@ -1,15 +1,12 @@
-// import { useState } from "react";
 import Header from "./components/Header";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Routes, Route, useNavigate } from "react-router-dom"; // Xóa BrowserRouter
 import Home from "./pages/Home";
 import Register from "./pages/Register";
 import Login from "./pages/Login";
 import Footer from "./components/Footer";
-UpdateProduct;
 import Order from "./pages/Order";
 import Profile from "./pages/Profile";
 import ProductDashboard from "./components/dashboard/Product/ProductDashboard";
-
 import { AdminRoute } from "./components/PrivateRoute";
 import CreateProduct from "./components/dashboard/Product/CreateProduct";
 import Product from "./pages/Product";
@@ -28,10 +25,40 @@ import UpdateDiscount from "./components/dashboard/Discount/UpdateDiscount";
 import AddToVariationDashboard from "./components/dashboard/Discount/AddToVariationDashboard";
 import AddToVariation from "./components/dashboard/Discount/AddToVariation";
 import CategoryPage from "./components/CategoryPage";
+import { useDispatch, useSelector } from "react-redux";
+import { jwtDecode } from "jwt-decode";
+import { useEffect } from "react";
+import { logout } from "./redux/user/userSlice";
 
 function App() {
+  const dispatch = useDispatch();
+  const { currentUser } = useSelector((state) => state.user);
+  const navigate = useNavigate();
+
+  // Hàm kiểm tra token hết hạn
+  const isTokenExpired = (token) => {
+    if (!token) return true;
+    try {
+      const decoded = jwtDecode(token);
+      return decoded.exp * 1000 < Date.now();
+    } catch (error) {
+      console.error("Invalid token:", error);
+      return true;
+    }
+  };
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+
+    if (!token || isTokenExpired(token)) {
+      dispatch(logout());
+      alert("Phiên đăng nhập của bạn đã hết hạn, vui lòng đăng nhập lại");
+      navigate("/login");
+    }
+  }, [dispatch, navigate]);
+
   return (
-    <BrowserRouter>
+    <>
       <Header />
       <Routes>
         <Route path="/" element={<Home />} />
@@ -56,7 +83,6 @@ function App() {
             path="/admin/dashboard/product/update/:id"
             element={<UpdateProduct />}
           />
-
           <Route
             path="/admin/dashboard/category"
             element={<CategoryDashboard />}
@@ -104,7 +130,7 @@ function App() {
         </Route>
       </Routes>
       <Footer />
-    </BrowserRouter>
+    </>
   );
 }
 
