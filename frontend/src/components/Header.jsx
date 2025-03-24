@@ -1,18 +1,19 @@
-import { Link, useNavigate, useLocation } from "react-router-dom";
-import { RxAvatar } from "react-icons/rx";
-import { FiShoppingCart } from "react-icons/fi";
-import { GrSearch } from "react-icons/gr";
-import { useDispatch, useSelector } from "react-redux";
-import { useState, useRef, useEffect } from "react";
-import { logout } from "../redux/user/userSlice";
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { RxAvatar } from 'react-icons/rx';
+import { FiShoppingCart } from 'react-icons/fi';
+import { GrSearch } from 'react-icons/gr';
+import { useDispatch, useSelector } from 'react-redux';
+import { useState, useRef, useEffect } from 'react';
+import { logout } from '../redux/user/userSlice';
 
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const { currentUser } = useSelector((state) => state.user);
+  const { cartQuantity } = useSelector((state) => state.cart);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const dropdownRef = useRef(null);
-  const location = useLocation(); // Theo dõi thay đổi route
+  const location = useLocation();
 
   // Hàm đóng dropdown khi click bên ngoài
   useEffect(() => {
@@ -22,9 +23,9 @@ export default function Header() {
       }
     };
 
-    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
 
@@ -35,7 +36,7 @@ export default function Header() {
 
   const handleLogout = () => {
     dispatch(logout());
-    navigate("/");
+    navigate('/');
   };
 
   return (
@@ -58,7 +59,7 @@ export default function Header() {
           <button className="text-base min-w-[80px] h-8 bg-blue-600 flex items-center justify-center rounded-r-md text-white">
             <GrSearch />
             <span className="text-xs sm:text-xs hidden sm:inline">
-              {" "}
+              {' '}
               Tìm kiếm
             </span>
           </button>
@@ -85,7 +86,7 @@ export default function Header() {
               {/* Dropdown */}
               {isOpen && (
                 <div className="absolute right-0 mt-2 w-44 bg-white border rounded-lg shadow-md">
-                  {currentUser.role === "USER" ? (
+                  {currentUser.role === 'USER' ? (
                     <ul className="py-2 text-sm text-gray-700">
                       <li>
                         <Link
@@ -167,8 +168,13 @@ export default function Header() {
 
           {/* Giỏ hàng */}
           <Link to="/cart">
-            <div className="mt-1 text-base min-w-[30px] flex items-center justify-center rounded-full">
+            <div className="relative mt-1 text-base min-w-[30px] flex items-center justify-center rounded-full">
               <FiShoppingCart />
+              {cartQuantity > 0 && (
+                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                  {cartQuantity}
+                </span>
+              )}
             </div>
           </Link>
         </ul>

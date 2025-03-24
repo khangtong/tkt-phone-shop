@@ -7,7 +7,7 @@ import sendEmail from "../configs/sendEmail.js";
 
 // Generate JWT Token
 const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "1m" });
+  return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "7d" });
 };
 
 export const registerUser = async (req, res) => {

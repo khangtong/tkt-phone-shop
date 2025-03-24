@@ -5,6 +5,7 @@ import Register from "./pages/Register";
 import Login from "./pages/Login";
 import Footer from "./components/Footer";
 import Order from "./pages/Order";
+import Cart from "./pages/Cart";
 import Profile from "./pages/Profile";
 import ProductDashboard from "./components/dashboard/Product/ProductDashboard";
 import { AdminRoute } from "./components/PrivateRoute";
@@ -70,6 +71,7 @@ function App() {
         <Route path="/product/:id" element={<Product />} />
         <Route path="/profile/order" element={<Order />} />
         <Route path="/category/:categoryName" element={<CategoryPage />} />
+        <Route path="/cart" element={<Cart />} />
         <Route element={<AdminRoute />}>
           <Route
             path="/admin/dashboard/product"

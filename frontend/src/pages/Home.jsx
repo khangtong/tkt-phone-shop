@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useRef } from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect, useState, useRef } from 'react';
+import { Link } from 'react-router-dom';
 
 const Home = () => {
   const [categories, setCategories] = useState([]);
@@ -22,8 +22,8 @@ const Home = () => {
   const fetchCategories = async () => {
     setLoadingCategories(true);
     try {
-      const response = await fetch("/api/categories");
-      if (!response.ok) throw new Error("Lỗi khi lấy danh mục");
+      const response = await fetch('/api/categories');
+      if (!response.ok) throw new Error('Lỗi khi lấy danh mục');
       const data = await response.json();
       setCategories(data);
     } catch (error) {
@@ -35,8 +35,8 @@ const Home = () => {
   const fetchVariations = async () => {
     setLoadingVariations(true);
     try {
-      const response = await fetch("/api/variations");
-      if (!response.ok) throw new Error("Lỗi khi lấy biến thể");
+      const response = await fetch('/api/variations');
+      if (!response.ok) throw new Error('Lỗi khi lấy biến thể');
       const data = await response.json();
       setVariations(data);
     } catch (error) {
@@ -48,8 +48,8 @@ const Home = () => {
   const fetchProducts = async () => {
     setLoadingProducts(true);
     try {
-      const response = await fetch("/api/products");
-      if (!response.ok) throw new Error("Lỗi khi lấy sản phẩm");
+      const response = await fetch('/api/products');
+      if (!response.ok) throw new Error('Lỗi khi lấy sản phẩm');
       const data = await response.json();
       setProducts(data);
     } catch (error) {
@@ -84,23 +84,23 @@ const Home = () => {
 
   const scrollContainer = (containerRef, direction) => {
     if (containerRef.current) {
-      const scrollAmount = direction === "left" ? -200 : 200;
+      const scrollAmount = direction === 'left' ? -200 : 200;
       containerRef.current.scrollBy({
         left: scrollAmount,
-        behavior: "smooth",
+        behavior: 'smooth',
       });
     }
   };
 
   const scrollCategoriesLeft = () =>
-    scrollContainer(categoriesContainerRef, "left");
+    scrollContainer(categoriesContainerRef, 'left');
   const scrollCategoriesRight = () =>
-    scrollContainer(categoriesContainerRef, "right");
+    scrollContainer(categoriesContainerRef, 'right');
 
   const scrollDiscountsLeft = () =>
-    scrollContainer(discountsContainerRef, "left");
+    scrollContainer(discountsContainerRef, 'left');
   const scrollDiscountsRight = () =>
-    scrollContainer(discountsContainerRef, "right");
+    scrollContainer(discountsContainerRef, 'right');
 
   const groupedProducts = groupProductsByCategory();
 
@@ -113,12 +113,12 @@ const Home = () => {
   });
 
   const formatPrice = (price) =>
-    new Intl.NumberFormat("vi-VN", {
-      style: "currency",
-      currency: "VND",
+    new Intl.NumberFormat('vi-VN', {
+      style: 'currency',
+      currency: 'VND',
     })
       .format(price)
-      .replace("₫", "đ");
+      .replace('₫', 'đ');
 
   const calculateDiscountedPrice = (price, discountAmount) => {
     return price - (price * discountAmount) / 100;
@@ -218,7 +218,7 @@ const Home = () => {
                     to={`/product/${product._id}`}
                     onClick={() => {
                       localStorage.setItem(
-                        "selectedProduct",
+                        'selectedProduct',
                         JSON.stringify({
                           productId: product._id,
                           productName: product.name,
@@ -228,12 +228,12 @@ const Home = () => {
                       );
                     }}
                     className="flex-none bg-white rounded-lg shadow-md overflow-hidden border border-gray-300"
-                    style={{ width: "270px", height: "420px" }}
+                    style={{ width: '270px', height: '420px' }}
                   >
                     <div className="relative w-full h-50 overflow-hidden">
                       <img
                         src={productImage}
-                        alt={product.name || "Sản phẩm"}
+                        alt={product.name || 'Sản phẩm'}
                         className="w-full h-full object-cover"
                       />
                       <span className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded">
@@ -316,13 +316,13 @@ const Home = () => {
                     <div
                       key={product._id}
                       className="flex-none bg-white rounded-lg shadow-md overflow-hidden border border-gray-300"
-                      style={{ width: "270px", height: "520px" }}
+                      style={{ width: '270px', height: '520px' }}
                     >
                       <Link
                         to={`/product/${product._id}`}
                         onClick={() => {
                           localStorage.setItem(
-                            "selectedProduct",
+                            'selectedProduct',
                             JSON.stringify({
                               productId: product._id,
                               productName: product.name,
@@ -346,8 +346,8 @@ const Home = () => {
                         </div>
                         <div className="p-4">
                           <h3 className="text-lg font-semibold text-gray-800 line-clamp-2">
-                            {product.name} ({selectedVariant.color},{" "}
-                            {selectedVariant.ram}GB RAM,{" "}
+                            {product.name} ({selectedVariant.color},{' '}
+                            {selectedVariant.ram}GB RAM,{' '}
                             {formatRom(selectedVariant.rom)})
                           </h3>
                           <div className="mt-2">
@@ -388,7 +388,7 @@ const Home = () => {
                         >
                           {product.variation.map((variant) => (
                             <option key={variant._id} value={variant._id}>
-                              {variant.ram}GB RAM, {formatRom(variant.rom)},{" "}
+                              {variant.ram}GB RAM, {formatRom(variant.rom)},{' '}
                               {variant.color}
                             </option>
                           ))}
