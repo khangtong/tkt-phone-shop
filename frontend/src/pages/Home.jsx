@@ -16,6 +16,38 @@ const Home = () => {
   const productsContainerRefs = useRef({});
   const discountsContainerRef = useRef(null);
 
+  //img
+  const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
+  const banners = [hinh1, hinh2, hinh3, hinh4];
+  const bannerIntervalRef = useRef();
+
+  useEffect(() => {
+    startBannerInterval();
+    return () => clearInterval(bannerIntervalRef.current);
+  }, [banners.length]);
+
+  const startBannerInterval = () => {
+    clearInterval(bannerIntervalRef.current);
+    bannerIntervalRef.current = setInterval(() => {
+      goToNextBanner();
+    }, 5000);
+  };
+
+  const goToNextBanner = () => {
+    setCurrentBannerIndex((prev) => (prev + 1) % banners.length);
+  };
+
+  const goToPrevBanner = () => {
+    setCurrentBannerIndex(
+      (prev) => (prev - 1 + banners.length) % banners.length
+    );
+  };
+
+  const goToBanner = (index) => {
+    setCurrentBannerIndex(index);
+    startBannerInterval();
+  };
+
   useEffect(() => {
     fetchCategories();
     fetchVariations();
@@ -145,7 +177,7 @@ const Home = () => {
     <div className="min-h-screen bg-gray-100 p-3 rounded-xl">
       {/* Danh mục */}
       <header className="bg-white shadow-md p-6 mt-8 rounded-lg mb-8">
-        <div className="uppercase pt-2 pl-2 text-decoration-line: underline">
+        <div className="uppercase pt-2 pl-2 text-decoration-line: mb-3 underline">
           Danh mục
         </div>
         <div className="container mx-auto px-4 py-4 relative bg-slate-100 rounded-lg">
@@ -189,10 +221,88 @@ const Home = () => {
         </div>
       </header>
 
+      {/* Banner với kích thước full khung hình */}
+      <section className="mb-8 rounded-lg overflow-hidden relative group w-full h-[340px]">
+        <div className="relative w-full h-full">
+          <img
+            src={banners[currentBannerIndex]}
+            alt={`Banner ${currentBannerIndex + 1}`}
+            className="w-full h-full object-cover transition-opacity duration-500"
+            style={{ minWidth: "1500px" }} // Đảm bảo hình ảnh đủ rộng
+          />
+          {/* Nút điều hướng trái */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              goToPrevBanner();
+              startBannerInterval();
+            }}
+            className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-3 rounded-full hover:bg-opacity-70 transition-all opacity-0 group-hover:opacity-100"
+            aria-label="Previous banner"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
+            </svg>
+          </button>
+          {/* Nút điều hướng phải */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              goToNextBanner();
+              startBannerInterval();
+            }}
+            className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-3 rounded-full hover:bg-opacity-70 transition-all opacity-0 group-hover:opacity-100"
+            aria-label="Next banner"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          </button>
+        </div>
+
+        {/* Các chấm indicator */}
+        <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
+          {banners.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => goToBanner(index)}
+              className={`w-3 h-3 rounded-full transition-all ${
+                index === currentBannerIndex
+                  ? "bg-white w-6"
+                  : "bg-gray-400 hover:bg-gray-300"
+              }`}
+              aria-label={`Go to banner ${index + 1}`}
+            />
+          ))}
+        </div>
+      </section>
+
       {/* Sản phẩm giảm giá */}
       <section className="bg-white shadow-md p-4 rounded-lg mb-8">
-        <div className="uppercase pt-2 pl-2 text-decoration-line: underline">
-          Giảm giá
+        <div className="uppercase pt-2 pl-2 text-decoration-line: underline mb-5 text-blue-700">
+          <Link to={"/product/discount"}> Sản phẩm giảm giá</Link>
         </div>
         <div className="container mx-auto px-4 py-4 relative bg-slate-100 rounded-lg">
           <button
@@ -283,8 +393,13 @@ const Home = () => {
             key={categoryName}
             className="bg-white shadow-md p-4 rounded-lg mb-8"
           >
-            <div className="uppercase pt-2 pl-2 text-decoration-line: underline">
-              {categoryName}
+            <div className="uppercase pt-2 pl-2 text-decoration-line: font-weight: 800 underline pb-3 text-blue-700">
+              <Link to={`/category/${categoryName}`}>
+                {" "}
+                <span>
+                  {categoryName} đáng mua nhất {">>"}
+                </span>
+              </Link>
             </div>
             <div className="container mx-auto px-4 py-4 relative bg-slate-100 rounded-lg">
               <nav
@@ -364,9 +479,7 @@ const Home = () => {
                                     {formatPrice(discountedPrice)}
                                   </span>
                                   <span className="ml-2 text-sm text-green-600">
-                                    (-
-                                    {selectedVariant.discount.amount}
-                                    %)
+                                    (-{selectedVariant.discount.amount}%)
                                   </span>
                                 </div>
                               </>
