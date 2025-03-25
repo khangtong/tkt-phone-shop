@@ -26,6 +26,8 @@ import UpdateDiscount from "./components/dashboard/Discount/UpdateDiscount";
 import AddToVariationDashboard from "./components/dashboard/Discount/AddToVariationDashboard";
 import AddToVariation from "./components/dashboard/Discount/AddToVariation";
 import CategoryPage from "./components/CategoryPage";
+import Orderdashboard from "./components/dashboard/Order/Orderdashboard";
+import DiscountProduct from "./components/DiscountProduct";
 
 function App() {
   return (
@@ -38,17 +40,22 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/product/:id" element={<Product />} />
+        <Route path="/product/discount" element={<DiscountProduct />} />
         <Route path="/profile/order" element={<Order />} />
+
         <Route path="/category/:categoryName" element={<CategoryPage />} />
         <Route element={<UserRoute />}>
           <Route path="/profile" element={<Profile />} />
           <Route path="/cart" element={<Cart />} />
         </Route>
+
         <Route element={<AdminRoute />}>
           <Route
             path="/admin/dashboard/product"
             element={<ProductDashboard />}
           />
+          <Route path="/admin/dashboard/order" element={<Orderdashboard />} />
+
           <Route
             path="/admin/dashboard/product/add"
             element={<CreateProduct />}

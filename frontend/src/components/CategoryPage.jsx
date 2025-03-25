@@ -70,8 +70,8 @@ const CategoryPage = () => {
     <div className="min-h-screen bg-gray-100 p-3 rounded-xl">
       <main className="container mx-auto px-4 py-8">
         <div className="bg-white shadow-md p-4 rounded-lg mb-8">
-          <div className="uppercase pt-2 pl-2 text-decoration-line: underline">
-            {categoryName}
+          <div className="uppercase pt-2 pl-2 text-decoration-line: underline mb-5 font-weight:800 ">
+            <span>{categoryName} đáng mua nhất</span>
           </div>
           <div className="container mx-auto px-4 py-4 bg-slate-100 rounded-lg">
             {loading ? (
