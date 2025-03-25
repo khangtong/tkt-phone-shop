@@ -104,7 +104,8 @@ export const deleteCartDetail = async (req, res) => {
     if (cart) {
       cart.totalPrice -=
         cartDetail.quantity *
-        (cartDetail.variation.discount.endDate >= new Date()
+        (cartDetail.variation.discount &&
+        cartDetail.variation.discount.endDate >= new Date()
           ? Math.round(
               cartDetail.variation.price *
                 (1 - cartDetail.variation.discount.amount / 100)
