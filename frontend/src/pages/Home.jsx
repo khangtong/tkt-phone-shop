@@ -177,7 +177,7 @@ const Home = () => {
     <div className="min-h-screen bg-gray-100 p-3 rounded-xl">
       {/* Danh mục */}
       <header className="bg-white shadow-md p-6 mt-8 rounded-lg mb-8">
-        <div className="uppercase pt-2 pl-2 text-decoration-line: underline">
+        <div className="uppercase pt-2 pl-2 text-decoration-line: mb-3 underline">
           Danh mục
         </div>
         <div className="container mx-auto px-4 py-4 relative bg-slate-100 rounded-lg">
@@ -396,7 +396,9 @@ const Home = () => {
             <div className="uppercase pt-2 pl-2 text-decoration-line: font-weight: 800 underline pb-3 text-blue-700">
               <Link to={`/category/${categoryName}`}>
                 {" "}
-                <span>{categoryName} đáng mua nhất </span>
+                <span>
+                  {categoryName} đáng mua nhất {">>"}
+                </span>
               </Link>
             </div>
             <div className="container mx-auto px-4 py-4 relative bg-slate-100 rounded-lg">
