@@ -1,5 +1,5 @@
 import Payment from '../models/paymentModel.js';
-import Cart from '../models/cartModefl.js';
+import Cart from '../models/cartModel.js';
 import jwt from 'jsonwebtoken';
 import { VNPay, ignoreLogger, ProductCode, VnpLocale, dateFormat } from 'vnpay';
 import dotenv from 'dotenv';

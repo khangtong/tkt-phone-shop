@@ -15,10 +15,10 @@ const cartSchema = new mongoose.Schema({
     default: 0,
     required: true,
   },
-  variation: [
+  cartDetails: [
     {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'variation',
+      ref: 'cartDetail',
     },
   ],
 });

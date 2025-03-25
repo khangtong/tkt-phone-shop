@@ -36,7 +36,7 @@ export const getAllVariations = async (req, res) => {
 		const variations = await Variation.find()
 
 			.populate('product', 'name image') // Chỉ lấy trường "name" của product
-			.populate('discount', 'amount name startDate endDate'); // Chỉ lấy các trường cần thiết của discount
+			.populate('discount'); // Chỉ lấy các trường cần thiết của discount
 
 		res.status(200).json(variations);
 	} catch (error) {
@@ -49,7 +49,7 @@ export const getVariationById = async (req, res) => {
 	try {
 		const variation = await Variation.findById(req.params.id)
 			.populate('product', 'name')
-			.populate('discount');
+			.populate('discount', 'amount startDate endDate');
 
 		if (!variation) {
 			return res.status(404).json({ message: 'Variation not found' });

@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
-import { FaTrash, FaShoppingCart } from "react-icons/fa";
-import { useDispatch, useSelector } from "react-redux";
-import { setCart } from "../redux/cart/cartSlice";
-import { Navigate } from "react-router-dom";
+import { useState, useEffect } from 'react';
+import { FaTrash, FaShoppingCart } from 'react-icons/fa';
+import { useDispatch, useSelector } from 'react-redux';
+import { setCart } from '../redux/cart/cartSlice';
+import { Navigate, Link } from 'react-router-dom';
 
 export default function Cart() {
   const dispatch = useDispatch();
@@ -14,17 +14,17 @@ export default function Cart() {
   // Format price (VND)
   const formatPrice = (price) => {
     const numberPrice = Number(price);
-    if (Number.isNaN(numberPrice)) return "0 ₫";
-    return numberPrice.toLocaleString("vi-VN", {
-      style: "currency",
-      currency: "VND",
+    if (Number.isNaN(numberPrice)) return '0 ₫';
+    return numberPrice.toLocaleString('vi-VN', {
+      style: 'currency',
+      currency: 'VND',
       maximumFractionDigits: 0,
     });
   };
 
   // Fetch cart data
   const fetchCartData = async () => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem('token');
     if (!token) {
       setLoading(false);
       return;
@@ -32,138 +32,107 @@ export default function Cart() {
 
     try {
       setError(null);
-      const response = await fetch("/api/carts/my-cart", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      const response = await fetch('/api/carts/my-cart', {
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (!response.ok) {
         if (response.status === 404) {
-          // Create new cart if not exists
-          const createResponse = await fetch("/api/carts", {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+          const createResponse = await fetch('/api/carts', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${token}` },
           });
-
-          if (!createResponse.ok) {
-            throw new Error("Failed to create new cart");
-          }
-
-          dispatch(setCart({ items: [], totalPrice: 0, totalQuantity: 0 }));
+          if (!createResponse.ok) throw new Error('Failed to create cart');
+          dispatch(
+            setCart({ cartDetails: [], totalPrice: 0, totalQuantity: 0 })
+          );
         } else {
-          throw new Error("Failed to fetch cart data");
+          throw new Error('Failed to fetch cart');
         }
       } else {
         const data = await response.json();
-        const itemsWithQuantity = (data.variation || []).map((item) => ({
-          ...item,
-          quantity: item.quantity || 1,
-        }));
-
-        const updatedCart = {
-          items: itemsWithQuantity,
-          totalPrice: data.totalPrice || 0,
-          totalQuantity:
-            data.totalQuantity ||
-            itemsWithQuantity.reduce(
-              (sum, item) => sum + (item.quantity || 1),
-              0
-            ),
-        };
-
-        dispatch(setCart(updatedCart));
+        dispatch(setCart(data));
+        console.log(globalCart);
       }
     } catch (err) {
       setError(err.message);
-      dispatch(setCart({ items: [], totalPrice: 0, totalQuantity: 0 }));
+      dispatch(setCart({ cartDetails: [], totalPrice: 0, totalQuantity: 0 }));
     } finally {
       setLoading(false);
     }
   };
 
-  // Fetch cart data on mount
   useEffect(() => {
     fetchCartData();
   }, [dispatch]);
 
-  // Update cart on server and then reload data
-  const updateCartAndReload = async (updatedItems) => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
+  const handleQuantityChange = async (
+    cartDetailId,
+    cartId,
+    variationId,
+    newQuantity
+  ) => {
+    if (isUpdating) return;
+    const validatedQuantity = Math.max(1, Math.min(99, newQuantity));
 
     try {
       setIsUpdating(true);
-      setError(null);
-
-      // Calculate totals
-      const totalQuantity = updatedItems.reduce(
-        (sum, item) => sum + (item.quantity || 1),
-        0
-      );
-      const totalPrice = updatedItems.reduce((total, item) => {
-        const price =
-          item.discount && new Date(item.discount.endDate) > new Date()
-            ? item.price * (1 - item.discount.amount / 100)
-            : item.price;
-        return total + price * (item.quantity || 1);
-      }, 0);
-
-      // Send update to server
-      const response = await fetch("/api/carts/my-cart", {
-        method: "PUT",
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/cart-details/${cartDetailId}`, {
+        method: 'PUT',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          variation: updatedItems,
-          totalPrice,
-          totalQuantity,
+          cart: cartId,
+          variation: variationId,
+          quantity: validatedQuantity,
         }),
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to update cart");
-      }
+      if (!response.ok) throw new Error('Failed to update quantity');
 
-      // Reload cart data from server after successful update
+      await fetch('/api/carts/my-cart', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({}),
+      });
+
       await fetchCartData();
     } catch (err) {
       setError(err.message);
-      // Try to reload cart data to recover
-      await fetchCartData();
     } finally {
       setIsUpdating(false);
     }
   };
 
-  // Handle quantity changes
-  const handleQuantityChange = (itemId, newQuantity) => {
-    if (isUpdating) return;
-
-    // Validate quantity (1-99)
-    const validatedQuantity = Math.max(1, Math.min(99, newQuantity));
-
-    const updatedItems = globalCart.items.map((item) =>
-      item._id === itemId ? { ...item, quantity: validatedQuantity } : item
-    );
-
-    updateCartAndReload(updatedItems);
-  };
-
   // Handle remove item
-  const handleRemove = (itemId) => {
+  const handleRemove = async (cartDetailId) => {
     if (isUpdating) return;
 
-    const updatedItems = globalCart.items.filter((item) => item._id !== itemId);
-    updateCartAndReload(updatedItems);
+    try {
+      setIsUpdating(true);
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/cart-details/${cartDetailId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!response.ok) throw new Error('Failed to remove item');
+      await fetchCartData();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   // Redirect if not logged in
-  if (!localStorage.getItem("token")) {
+  if (!localStorage.getItem('token')) {
     return <Navigate to="/login" replace />;
   }
 
@@ -198,19 +167,22 @@ export default function Cart() {
                 : null;
 
               return (
-                <div key={item._id} className="flex items-center border-b pb-4">
+                <div
+                  key={item.cartDetailId}
+                  className="flex items-center border-b pb-4"
+                >
                   <img
-                    src={item.product?.image?.[0] || "/placeholder-product.jpg"}
-                    alt={item.product?.name || "Sản phẩm"}
+                    src={item.product?.image?.[0] || '/placeholder-product.jpg'}
+                    alt={item.product?.name || 'Sản phẩm'}
                     className="w-20 h-20 object-cover rounded-lg mr-4"
                     onError={(e) => {
-                      e.target.src = "/placeholder-product.jpg";
+                      e.target.src = '/placeholder-product.jpg';
                     }}
                   />
 
                   <div className="flex-1">
                     <h2 className="font-medium">
-                      {item.product?.name || "Sản phẩm"}
+                      {item.product?.name || 'Sản phẩm'}
                     </h2>
                     {discountValid ? (
                       <div>
@@ -232,36 +204,39 @@ export default function Cart() {
                   <div className="flex items-center space-x-4">
                     <div className="flex items-center border rounded">
                       <button
-                        className="px-3 py-1 hover:bg-gray-100 disabled:opacity-50"
                         onClick={() =>
                           handleQuantityChange(
+                            item.cartDetailId,
+                            item.cartId,
                             item._id,
-                            (item.quantity || 1) - 1
+                            item.quantity - 1
                           )
                         }
-                        disabled={isUpdating || (item.quantity || 1) <= 1}
+                        disabled={isUpdating || item.quantity <= 1}
+                        className="px-2 hover:bg-neutral-100 border-r border-gray-300"
                       >
                         -
                       </button>
-                      <span className="px-3">{item.quantity || 1}</span>
+                      <span className="px-3">{item.quantity}</span>
                       <button
-                        className="px-3 py-1 hover:bg-gray-100 disabled:opacity-50"
                         onClick={() =>
                           handleQuantityChange(
+                            item.cartDetailId,
+                            item.cartId,
                             item._id,
-                            (item.quantity || 1) + 1
+                            item.quantity + 1
                           )
                         }
-                        disabled={isUpdating || (item.quantity || 1) >= 99}
+                        disabled={isUpdating || item.quantity >= 99}
+                        className="px-2 hover:bg-neutral-100 border-l border-gray-300"
                       >
                         +
                       </button>
                     </div>
-
                     <button
-                      className="text-red-500 hover:text-red-700 disabled:opacity-50"
-                      onClick={() => handleRemove(item._id)}
+                      onClick={() => handleRemove(item.cartDetailId)}
                       disabled={isUpdating}
+                      className="text-red-500"
                     >
                       <FaTrash />
                     </button>
@@ -283,7 +258,7 @@ export default function Cart() {
               className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
               disabled={isUpdating || globalCart.items.length === 0}
             >
-              Thanh toán
+              Đặt hàng
             </button>
           </div>
         </>
@@ -296,6 +271,12 @@ export default function Cart() {
           <p className="text-gray-600 mb-6">
             Hãy thêm sản phẩm vào giỏ hàng để tiếp tục
           </p>
+          <Link
+            to="/"
+            className="inline-block px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+          >
+            Mua sắm ngay
+          </Link>
         </div>
       )}
     </div>
