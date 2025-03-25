@@ -49,7 +49,7 @@ export const getVariationById = async (req, res) => {
 	try {
 		const variation = await Variation.findById(req.params.id)
 			.populate('product', 'name')
-			.populate('discount', 'amount startDate endDate');
+			.populate('discount');
 
 		if (!variation) {
 			return res.status(404).json({ message: 'Variation not found' });

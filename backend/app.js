@@ -10,6 +10,7 @@ import cartRoute from './routes/cartRoute.js';
 import discountRoute from './routes/discountRoute.js';
 import orderRoute from './routes/orderRoute.js';
 import orderDetailRoute from './routes/orderDetailRoute.js';
+import paymentRoute from './routes/paymentRoute.js';
 
 const app = express();
 // app.use(cors());
@@ -26,9 +27,10 @@ app.use('/api/carts', cartRoute);
 app.use('/api/discounts', discountRoute);
 app.use('/api/orders', orderRoute);
 app.use('/api/order-details', orderDetailRoute);
+app.use('/api/payment', paymentRoute);
 
 app.get('/', (req, res) => {
-  res.send('Hello World!');
+	res.send('Hello World!');
 });
 
 export default app;
