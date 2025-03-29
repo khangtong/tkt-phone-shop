@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
-import { FaTrash, FaShoppingCart } from 'react-icons/fa';
-import { useDispatch, useSelector } from 'react-redux';
-import { setCart } from '../redux/cart/cartSlice';
-import { Navigate, Link } from 'react-router-dom';
+import { useState, useEffect } from "react";
+import { FaTrash, FaShoppingCart } from "react-icons/fa";
+import { useDispatch, useSelector } from "react-redux";
+import { setCart } from "../redux/cart/cartSlice";
+import { Navigate, Link } from "react-router-dom";
 
 export default function Cart() {
   const dispatch = useDispatch();
@@ -14,17 +14,17 @@ export default function Cart() {
   // Format price (VND)
   const formatPrice = (price) => {
     const numberPrice = Number(price);
-    if (Number.isNaN(numberPrice)) return '0 ₫';
-    return numberPrice.toLocaleString('vi-VN', {
-      style: 'currency',
-      currency: 'VND',
+    if (Number.isNaN(numberPrice)) return "0 ₫";
+    return numberPrice.toLocaleString("vi-VN", {
+      style: "currency",
+      currency: "VND",
       maximumFractionDigits: 0,
     });
   };
 
   // Fetch cart data
   const fetchCartData = async () => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     if (!token) {
       setLoading(false);
       return;
@@ -32,22 +32,22 @@ export default function Cart() {
 
     try {
       setError(null);
-      const response = await fetch('/api/carts/my-cart', {
+      const response = await fetch("/api/carts/my-cart", {
         headers: { Authorization: `Bearer ${token}` },
       });
 
       if (!response.ok) {
         if (response.status === 404) {
-          const createResponse = await fetch('/api/carts', {
-            method: 'POST',
+          const createResponse = await fetch("/api/carts", {
+            method: "POST",
             headers: { Authorization: `Bearer ${token}` },
           });
-          if (!createResponse.ok) throw new Error('Failed to create cart');
+          if (!createResponse.ok) throw new Error("Failed to create cart");
           dispatch(
             setCart({ cartDetails: [], totalPrice: 0, totalQuantity: 0 })
           );
         } else {
-          throw new Error('Failed to fetch cart');
+          throw new Error("Failed to fetch cart");
         }
       } else {
         const data = await response.json();
@@ -77,11 +77,11 @@ export default function Cart() {
 
     try {
       setIsUpdating(true);
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       const response = await fetch(`/api/cart-details/${cartDetailId}`, {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
@@ -91,12 +91,12 @@ export default function Cart() {
         }),
       });
 
-      if (!response.ok) throw new Error('Failed to update quantity');
+      if (!response.ok) throw new Error("Failed to update quantity");
 
-      await fetch('/api/carts/my-cart', {
-        method: 'PUT',
+      await fetch("/api/carts/my-cart", {
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({}),
@@ -116,13 +116,13 @@ export default function Cart() {
 
     try {
       setIsUpdating(true);
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       const response = await fetch(`/api/cart-details/${cartDetailId}`, {
-        method: 'DELETE',
+        method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (!response.ok) throw new Error('Failed to remove item');
+      if (!response.ok) throw new Error("Failed to remove item");
       await fetchCartData();
     } catch (err) {
       setError(err.message);
@@ -132,7 +132,7 @@ export default function Cart() {
   };
 
   // Redirect if not logged in
-  if (!localStorage.getItem('token')) {
+  if (!localStorage.getItem("token")) {
     return <Navigate to="/login" replace />;
   }
 
@@ -172,17 +172,17 @@ export default function Cart() {
                   className="flex items-center border-b pb-4"
                 >
                   <img
-                    src={item.product?.image?.[0] || '/placeholder-product.jpg'}
-                    alt={item.product?.name || 'Sản phẩm'}
+                    src={item.product?.image?.[0] || "/placeholder-product.jpg"}
+                    alt={item.product?.name || "Sản phẩm"}
                     className="w-20 h-20 object-cover rounded-lg mr-4"
                     onError={(e) => {
-                      e.target.src = '/placeholder-product.jpg';
+                      e.target.src = "/placeholder-product.jpg";
                     }}
                   />
 
                   <div className="flex-1">
                     <h2 className="font-medium">
-                      {item.product?.name || 'Sản phẩm'}
+                      {item.product?.name || "Sản phẩm"}
                     </h2>
                     {discountValid ? (
                       <div>
