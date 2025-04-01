@@ -146,7 +146,10 @@ export const updateCart = async (req, res) => {
     newCart.cartDetails = cartDetails;
 
     newCart.totalPrice = cartDetails.reduce((acc, item) => {
-      if (item.variation.discount.endDate >= new Date()) {
+      if (
+        item.variation.discount &&
+        item.variation.discount.endDate >= new Date()
+      ) {
         return (
           acc +
           Math.round(
@@ -176,10 +179,10 @@ export const updateCart = async (req, res) => {
 
 export const deleteCart = async (req, res) => {
   try {
-    const cart = await Cart.findById(req.params.id);
+    const cart = await Cart.findByIdAndDelete(req.params.id);
     if (!cart) return res.status(404).json({ message: 'Cart not found' });
 
-    await cart.delete();
+    await CartDetail.deleteMany({ cart: cart._id });
     res.status(200).json({ message: 'Cart has been deleted' });
   } catch (error) {
     res.status(500).json({ message: error.message });
