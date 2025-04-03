@@ -237,7 +237,7 @@ export default function Cart() {
                             item.quantity + 1
                           )
                         }
-                        disabled={isUpdating || item.quantity >= 99}
+                        disabled={isUpdating || item.quantity >= item.stock}
                         className="px-2 hover:bg-neutral-100 border-l border-gray-300"
                       >
                         +

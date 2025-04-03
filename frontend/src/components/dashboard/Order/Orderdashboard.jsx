@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Sidebar from "../../Sidebar";
-import { FaSearch, FaEye, FaEdit, FaTrash } from "react-icons/fa";
+import { FaSearch, FaEye, FaTrash } from "react-icons/fa";
 import { useSelector } from "react-redux";
 import CustomModalConfirm from "../../CustomModal";
+import { Toast } from "flowbite-react";
+import { HiCheck, HiX } from "react-icons/hi";
 
 export default function OrderDashboard() {
   const [activeTab, setActiveTab] = useState("orders");
@@ -12,12 +14,33 @@ export default function OrderDashboard() {
   const [filteredOrders, setFilteredOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const { currentUser } = useSelector((state) => state.user);
-  const [toast, setToast] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
   const [openModal, setOpenModal] = useState(false);
   const [orderIdToDelete, setOrderIdToDelete] = useState(null);
   const [statusFilter, setStatusFilter] = useState("all");
+
+  // State quản lý toast
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastType, setToastType] = useState("success");
+
+  // Tự động ẩn toast sau 3 giây
+  useEffect(() => {
+    if (showToast) {
+      const timer = setTimeout(() => {
+        setShowToast(false);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [showToast]);
+
+  // Hàm hiển thị toast
+  const showToastMessage = (type, message) => {
+    setToastType(type);
+    setToastMessage(message);
+    setShowToast(true);
+  };
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -33,14 +56,15 @@ export default function OrderDashboard() {
       setFilteredOrders(data);
     } catch (error) {
       console.error(error);
-      setToast({ type: "error", message: "Lỗi khi tải đơn hàng" });
-      setTimeout(() => setToast(null), 3000);
+      showToastMessage("error", "Lỗi khi tải đơn hàng");
     }
     setLoading(false);
   };
 
   const handleDeleteOrder = async (orderId) => {
     try {
+      console.log("Deleting order:", orderId); // Log order ID
+
       const res = await fetch(`/api/orders/${orderId}`, {
         method: "DELETE",
         headers: {
@@ -49,21 +73,29 @@ export default function OrderDashboard() {
         },
       });
 
+      const data = await res.json();
+      console.log("Delete response:", data); // Log full response
+
       if (!res.ok) {
-        const errorData = await res.json();
-        setToast({ type: "error", message: errorData.message });
-        return;
+        throw new Error(data.message || `HTTP error! status: ${res.status}`);
       }
 
+      // Cập nhật UI
       setOrders((prev) => prev.filter((order) => order._id !== orderId));
       setFilteredOrders((prev) =>
         prev.filter((order) => order._id !== orderId)
       );
-      setToast({ type: "success", message: "Xóa đơn hàng thành công!" });
-      setOpenModal(false);
-      setTimeout(() => setToast(null), 3000);
+
+      showToastMessage("success", data.message || "Xóa đơn hàng thành công");
     } catch (error) {
-      setToast({ type: "error", message: "Lỗi khi xóa đơn hàng." });
+      console.error("Delete failed:", {
+        error: error.message,
+        stack: error.stack,
+        orderId,
+      });
+      showToastMessage("error", error.message || "Lỗi khi xóa đơn hàng");
+    } finally {
+      setOpenModal(false);
     }
   };
 
@@ -80,7 +112,7 @@ export default function OrderDashboard() {
 
       if (!res.ok) {
         const errorData = await res.json();
-        setToast({ type: "error", message: errorData.message });
+        showToastMessage("error", errorData.message);
         return;
       }
 
@@ -99,10 +131,9 @@ export default function OrderDashboard() {
             : order
         )
       );
-      setToast({ type: "success", message: "Cập nhật trạng thái thành công!" });
-      setTimeout(() => setToast(null), 3000);
+      showToastMessage("success", "Cập nhật trạng thái đơn hàng thành công!");
     } catch (error) {
-      setToast({ type: "error", message: "Lỗi khi cập nhật trạng thái." });
+      showToastMessage("error", "Lỗi khi cập nhật trạng thái.");
     }
   };
 
@@ -113,12 +144,12 @@ export default function OrderDashboard() {
   useEffect(() => {
     let result = orders;
 
-    // Apply status filter
+    // Lọc theo trạng thái
     if (statusFilter !== "all") {
       result = result.filter((order) => order.status === statusFilter);
     }
 
-    // Apply search filter
+    // Lọc theo từ khóa tìm kiếm
     if (searchTerm) {
       result = result.filter(
         (order) =>
@@ -137,8 +168,11 @@ export default function OrderDashboard() {
   }, [searchTerm, statusFilter, orders]);
 
   const formatDate = (dateString) => {
-    const options = { year: "numeric", month: "long", day: "numeric" };
-    return new Date(dateString).toLocaleDateString("vi-VN", options);
+    const date = new Date(dateString);
+    const day = date.getDate().toString().padStart(2, "0");
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
   };
 
   const formatCurrency = (amount) => {
@@ -164,23 +198,49 @@ export default function OrderDashboard() {
     { value: "Delivery", label: "Đang giao" },
     { value: "Success", label: "Hoàn thành" },
   ];
+  // Hàm tạo mã đơn hàng ngẫu nhiên 8 ký tự (số + chữ hoa)
+  const generateRandomOrderCode = (id) => {
+    // Sử dụng _id như một phần của seed để đảm bảo tính nhất quán
+    const seed = id || Math.random().toString(36).substring(2);
+    const chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    let result = "";
 
+    for (let i = 0; i < 8; i++) {
+      const randomIndex = Math.floor(Math.random() * chars.length);
+      result += chars[randomIndex];
+    }
+
+    return result;
+  };
   return (
     <div className="flex h-screen bg-gray-100">
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
 
-      <div className="w-4/5 p-6">
-        <div className="bg-white p-6 rounded-xl shadow-lg">
-          {toast && (
+      {/* Toast thông báo */}
+      {showToast && (
+        <div className="fixed top-0 left-1/2 -translate-x-1/2 mt-5 z-50">
+          <Toast>
             <div
-              className={`fixed top-5 right-5 p-4 rounded-lg shadow-lg text-white ${
-                toast.type === "success" ? "bg-green-500" : "bg-red-500"
+              className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
+                toastType === "success"
+                  ? "bg-green-100 text-green-500 dark:bg-green-800 dark:text-green-200"
+                  : "bg-red-100 text-red-500 dark:bg-red-800 dark:text-red-200"
               }`}
             >
-              {toast.message}
+              {toastType === "success" ? (
+                <HiCheck className="h-5 w-5" />
+              ) : (
+                <HiX className="h-5 w-5" />
+              )}
             </div>
-          )}
+            <div className="ml-3 text-sm font-normal">{toastMessage}</div>
+            <Toast.Toggle onDismiss={() => setShowToast(false)} />
+          </Toast>
+        </div>
+      )}
 
+      <div className="w-4/5 p-6">
+        <div className="bg-white p-6 rounded-xl shadow-lg">
           <div className="flex justify-between items-center mb-4">
             <div className="relative w-1/3">
               <input
