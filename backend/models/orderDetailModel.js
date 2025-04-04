@@ -20,7 +20,7 @@ const orderDetailSchema = new mongoose.Schema(
       required: true,
       min: 1,
     },
-    // Thêm các trường mới KHÔNG ảnh hưởng đến orderModel
+    // orderModel
     priceAtPurchase: {
       // Lưu giá tại thời điểm mua
       type: Number,

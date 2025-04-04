@@ -63,7 +63,7 @@ export default function OrderDashboard() {
 
   const handleDeleteOrder = async (orderId) => {
     try {
-      console.log("Deleting order:", orderId); // Log order ID
+      console.log("Deleting order:", orderId);
 
       const res = await fetch(`/api/orders/${orderId}`, {
         method: "DELETE",
@@ -74,19 +74,18 @@ export default function OrderDashboard() {
       });
 
       const data = await res.json();
-      console.log("Delete response:", data); // Log full response
+      console.log("Delete response:", data);
 
       if (!res.ok) {
         throw new Error(data.message || `HTTP error! status: ${res.status}`);
       }
 
-      // Cập nhật UI
       setOrders((prev) => prev.filter((order) => order._id !== orderId));
       setFilteredOrders((prev) =>
         prev.filter((order) => order._id !== orderId)
       );
 
-      showToastMessage("success", data.message || "Xóa đơn hàng thành công");
+      showToastMessage("success", data.message || "Xóa đơn hàng tất công");
     } catch (error) {
       console.error("Delete failed:", {
         error: error.message,
@@ -131,7 +130,18 @@ export default function OrderDashboard() {
             : order
         )
       );
-      showToastMessage("success", "Cập nhật trạng thái đơn hàng thành công!");
+
+      const statusMessages = {
+        Pending: "Đơn hàng đã được chuyển về trạng thái Chờ xử lý",
+        Delivery: "Đơn hàng đang được giao",
+        Success: "Đơn hàng đã hoàn tất",
+        Cancelled: "Đơn hàng đã được hủy",
+      };
+
+      showToastMessage(
+        "success",
+        statusMessages[updatedOrder.status] || "Cập nhật trạng thái tất công!"
+      );
     } catch (error) {
       showToastMessage("error", "Lỗi khi cập nhật trạng thái.");
     }
@@ -140,6 +150,36 @@ export default function OrderDashboard() {
   useEffect(() => {
     fetchOrders();
   }, []);
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "Pending":
+        return "bg-yellow-100 text-yellow-800";
+      case "Delivery":
+        return "bg-blue-100 text-blue-800";
+      case "Success":
+        return "bg-green-100 text-green-800";
+      case "Cancelled":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  const getStatusText = (status) => {
+    switch (status) {
+      case "Pending":
+        return "Chờ xử lý";
+      case "Delivery":
+        return "Đang giao";
+      case "Success":
+        return "Hoàn tất";
+      case "Cancelled":
+        return "Đã hủy";
+      default:
+        return status;
+    }
+  };
 
   useEffect(() => {
     let result = orders;
@@ -196,27 +236,14 @@ export default function OrderDashboard() {
     { value: "all", label: "Tất cả" },
     { value: "Pending", label: "Chờ xử lý" },
     { value: "Delivery", label: "Đang giao" },
-    { value: "Success", label: "Hoàn thành" },
+    { value: "Success", label: "Hoàn tất" },
+    { value: "Cancelled", label: "Đã hủy" },
   ];
-  // Hàm tạo mã đơn hàng ngẫu nhiên 8 ký tự (số + chữ hoa)
-  const generateRandomOrderCode = (id) => {
-    // Sử dụng _id như một phần của seed để đảm bảo tính nhất quán
-    const seed = id || Math.random().toString(36).substring(2);
-    const chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    let result = "";
 
-    for (let i = 0; i < 8; i++) {
-      const randomIndex = Math.floor(Math.random() * chars.length);
-      result += chars[randomIndex];
-    }
-
-    return result;
-  };
   return (
     <div className="flex h-screen bg-gray-100">
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
 
-      {/* Toast thông báo */}
       {showToast && (
         <div className="fixed top-0 left-1/2 -translate-x-1/2 mt-5 z-50">
           <Toast>
@@ -293,7 +320,7 @@ export default function OrderDashboard() {
                         <td className="p-3">
                           {(currentPage - 1) * itemsPerPage + index + 1}
                         </td>
-                        <td className="p-3">{order._id.substring(0, 8)}...</td>
+                        <td className="p-3">{order._id.substring(0, 10)}</td>
                         <td className="p-3">
                           {order.userId?.name || "Khách vãng lai"}
                         </td>
@@ -312,16 +339,21 @@ export default function OrderDashboard() {
                                 ? "bg-yellow-100 text-yellow-800"
                                 : order.status === "Delivery"
                                 ? "bg-blue-100 text-blue-800"
-                                : "bg-green-100 text-green-800"
+                                : order.status === "Success"
+                                ? "bg-green-100 text-green-800"
+                                : "bg-red-100 text-red-800"
                             }`}
                           >
                             <option value="Pending">Chờ xử lý</option>
                             <option value="Delivery">Đang giao</option>
-                            <option value="Success">Hoàn thành</option>
+                            <option value="Success">Hoàn tất</option>
+                            <option value="Cancelled">Đã hủy</option>
                           </select>
                         </td>
                         <td className="p-3 flex space-x-2">
-                          <Link to={`/admin/dashboard/order/${order._id}`}>
+                          <Link
+                            to={`/admin/dashboard/order/orderdetail/${order._id}`}
+                          >
                             <button className="bg-blue-500 p-2 text-white rounded-lg">
                               <FaEye />
                             </button>

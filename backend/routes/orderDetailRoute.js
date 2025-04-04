@@ -6,7 +6,7 @@ const router = express.Router();
 
 // Get order details by order ID (protected route)
 router.get(
-  "/order/:orderId",
+  "/:orderId",
   protect,
   orderDetailController.getOrderDetailsByOrderId
 );

@@ -36,6 +36,105 @@ const createOrder = async (req, res) => {
     });
   }
 };
+const getOrderById = async (req, res) => {
+  try {
+    // Lấy thông tin đơn hàng chính
+    const order = await Order.findById(req.params.id).populate(
+      "userId",
+      "name email phone"
+    );
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy đơn hàng",
+      });
+    }
+
+    // Lấy tất cả order details liên quan đến đơn hàng này
+    const orderDetails = await OrderDetail.find({ orderId: order._id })
+      .populate("productId", "name images price")
+      .populate("variationId", "ram rom size color");
+
+    // Tạo response object kết hợp thông tin
+    const response = {
+      _id: order._id,
+      userId: order.userId,
+      total: order.total,
+      delivery_address: order.delivery_address,
+      orderDate: order.orderDate,
+      paymentMethod: order.paymentMethod,
+      status: order.status,
+      contactPhone: order.contactPhone,
+      customerName: order.customerName,
+      customerEmail: order.customerEmail,
+      orderDetails: orderDetails,
+    };
+
+    res.status(200).json({
+      success: true,
+      data: response,
+    });
+  } catch (error) {
+    console.error("Lỗi khi lấy chi tiết đơn hàng:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+//
+const getOrderDetails = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    const orderDetails = await OrderDetail.find({ orderId: order._id })
+      .populate("productId", "name")
+      .populate("variationId");
+
+    res.json({
+      orderDetails,
+      order,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+// Hàm hủy đơn hàng (cho user)
+export const cancelOrder = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+
+    if (!order) {
+      return res.status(404).json({ message: "Không tìm thấy đơn hàng" });
+    }
+
+    // Kiểm tra quyền user
+    if (order.userId.toString() !== req.user._id.toString()) {
+      return res
+        .status(403)
+        .json({ message: "Không có quyền hủy đơn hàng này" });
+    }
+
+    // Sử dụng method cancelOrder đã định nghĩa trong model
+    const cancelledOrder = await order.cancelOrder();
+
+    res.status(200).json({
+      success: true,
+      message: "Hủy đơn hàng thành công và đã hoàn trả số lượng tồn kho",
+      data: cancelledOrder,
+    });
+  } catch (error) {
+    console.error("Lỗi khi hủy đơn hàng:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Đã xảy ra lỗi khi hủy đơn hàng",
+    });
+  }
+};
 const getAllOrders = async (req, res) => {
   try {
     const orders = await Order.find({})
@@ -109,6 +208,7 @@ export {
   createOrder,
   getAllOrders,
   getUserOrders,
+  getOrderById,
   updateOrderStatus,
   deleteOrder,
 };
