@@ -32,6 +32,8 @@ import Checkout from './pages/Checkout';
 import PaymentSuccess from './pages/PaymentSuccess';
 import Search from './pages/Search';
 import Revenue from './components/dashboard/Revenue/Revenue';
+import OrderDetail from './components/dashboard/Order/OrderDetail';
+import OrderDetailUS from './pages/OrderDetailUS';
 
 function App() {
   return (
@@ -45,7 +47,6 @@ function App() {
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/product/:id" element={<Product />} />
         <Route path="/product/discount" element={<DiscountProduct />} />
-        <Route path="/profile/order" element={<Order />} />
 
         <Route path="/category/:categoryName" element={<CategoryPage />} />
         <Route path="/checkout" element={<Checkout />} />
@@ -55,6 +56,8 @@ function App() {
         />
         <Route path="/search" element={<Search />} />
         <Route element={<UserRoute />}>
+          <Route path="/profile/order" element={<Order />} />
+          <Route path="/profile/order/:id" element={<OrderDetailUS />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/cart" element={<Cart />} />
         </Route>
@@ -65,6 +68,10 @@ function App() {
             element={<ProductDashboard />}
           />
           <Route path="/admin/dashboard/order" element={<Orderdashboard />} />
+          <Route
+            path="/admin/dashboard/order/orderdetail/:id"
+            element={<OrderDetail />}
+          />
 
           <Route
             path="/admin/dashboard/product/add"

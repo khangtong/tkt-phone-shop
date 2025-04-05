@@ -1,12 +1,12 @@
-import jwt from 'jsonwebtoken';
+import jwt from "jsonwebtoken";
 
-import Cart from '../models/cartModel.js';
-import Variation from '../models/variationModel.js';
-import CartDetail from '../models/cartDetailModel.js';
+import Cart from "../models/cartModel.js";
+import Variation from "../models/variationModel.js";
+import CartDetail from "../models/cartDetailModel.js";
 
 export const createCart = async (req, res) => {
   try {
-    const token = req.headers.authorization?.split(' ')[1];
+    const token = req.headers.authorization?.split(" ")[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.body.userId = decoded.id;
 
@@ -14,7 +14,7 @@ export const createCart = async (req, res) => {
     if (cart)
       return res
         .status(400)
-        .json({ message: 'Cart can only create once per user' });
+        .json({ message: "Cart can only create once per user" });
 
     const newCart = new Cart(req.body);
     const savedCart = await newCart.save();
@@ -27,12 +27,12 @@ export const createCart = async (req, res) => {
 export const getAllCarts = async (req, res) => {
   try {
     const carts = await Cart.find()
-      .populate('userId')
+      .populate("userId")
       .populate({
-        path: 'cartDetails',
+        path: "cartDetails",
         populate: {
-          path: 'variation',
-          populate: [{ path: 'product' }, { path: 'discount' }],
+          path: "variation",
+          populate: [{ path: "product" }, { path: "discount" }],
         },
       });
     res.status(200).json(carts);
@@ -43,20 +43,20 @@ export const getAllCarts = async (req, res) => {
 
 export const getCartByUserId = async (req, res) => {
   try {
-    const token = req.headers.authorization?.split(' ')[1];
+    const token = req.headers.authorization?.split(" ")[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     const cart = await Cart.findOne({ userId: decoded.id })
-      .populate('userId')
+      .populate("userId")
       .populate({
-        path: 'cartDetails',
+        path: "cartDetails",
         populate: {
-          path: 'variation',
-          populate: [{ path: 'product' }, { path: 'discount' }],
+          path: "variation",
+          populate: [{ path: "product" }, { path: "discount" }],
         },
       });
 
-    if (!cart) return res.status(404).json({ message: 'Cart not found' });
+    if (!cart) return res.status(404).json({ message: "Cart not found" });
 
     res.status(200).json(cart);
   } catch (error) {
@@ -67,15 +67,15 @@ export const getCartByUserId = async (req, res) => {
 export const getCartById = async (req, res) => {
   try {
     const cart = await Cart.findById(req.params.id)
-      .populate('userId')
+      .populate("userId")
       .populate({
-        path: 'cartDetails',
+        path: "cartDetails",
         populate: {
-          path: 'variation',
-          populate: [{ path: 'product' }, { path: 'discount' }],
+          path: "variation",
+          populate: [{ path: "product" }, { path: "discount" }],
         },
       });
-    if (!cart) return res.status(404).json({ message: 'Cart not found' });
+    if (!cart) return res.status(404).json({ message: "Cart not found" });
     res.status(200).json(cart);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -84,22 +84,22 @@ export const getCartById = async (req, res) => {
 
 export const addVariationToCart = async (req, res) => {
   try {
-    const token = req.headers.authorization?.split(' ')[1];
+    const token = req.headers.authorization?.split(" ")[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     const cart = await Cart.findOne({ userId: decoded.id }).populate(
-      'cartDetails'
+      "cartDetails"
     );
-    if (!cart) return res.status(404).json({ message: 'Cart not found' });
+    if (!cart) return res.status(404).json({ message: "Cart not found" });
 
     const variation = await Variation.findById(req.body._id);
     if (!variation)
-      return res.status(404).json({ message: 'Variation not found' });
+      return res.status(404).json({ message: "Variation not found" });
 
     if (variation.stock < 1) {
       return res
         .status(400)
-        .json({ message: 'This variation is out of stock' });
+        .json({ message: "This variation is out of stock" });
     }
 
     const cartDetail = await CartDetail.findOne({
@@ -131,17 +131,17 @@ export const addVariationToCart = async (req, res) => {
 
 export const updateCart = async (req, res) => {
   try {
-    const token = req.headers.authorization?.split(' ')[1];
+    const token = req.headers.authorization?.split(" ")[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     const cart = await Cart.findOne({ userId: decoded.id });
-    if (!cart) return res.status(404).json({ message: 'Cart not found' });
+    if (!cart) return res.status(404).json({ message: "Cart not found" });
 
     const newCart = {};
     newCart.userId = decoded.id;
     const cartDetails = await CartDetail.find({ cart: cart._id }).populate({
-      path: 'variation',
-      populate: { path: 'discount' },
+      path: "variation",
+      populate: { path: "discount" },
     });
     newCart.cartDetails = cartDetails;
 
@@ -180,10 +180,10 @@ export const updateCart = async (req, res) => {
 export const deleteCart = async (req, res) => {
   try {
     const cart = await Cart.findByIdAndDelete(req.params.id);
-    if (!cart) return res.status(404).json({ message: 'Cart not found' });
+    if (!cart) return res.status(404).json({ message: "Cart not found" });
 
     await CartDetail.deleteMany({ cart: cart._id });
-    res.status(200).json({ message: 'Cart has been deleted' });
+    res.status(200).json({ message: "Cart has been deleted" });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

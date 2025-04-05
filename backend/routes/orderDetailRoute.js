@@ -1,14 +1,19 @@
 import express from "express";
-import {
-  getOrderDetails,
-  deleteOrderDetail,
-} from "../controllers/orderDetailController.js";
+import orderDetailController from "../controllers/orderDetailController.js";
 import { protect } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
-// Lấy chi tiết đơn hàng
-router.get("/:orderId", protect, getOrderDetails);
-// Xóa một chi tiết đơn hàng
-router.delete("/:id", protect, deleteOrderDetail);
 
+// Get order details by order ID (protected route)
+router.get(
+  "/:orderId",
+  protect,
+  orderDetailController.getOrderDetailsByOrderId
+);
+router.post("/", protect, orderDetailController.createOrderDetail);
+// Update order detail (admin/seller only)
+router.put("/:id", protect, orderDetailController.updateOrderDetail);
+
+// Delete order detail (admin/seller only)
+router.delete("/:id", protect, orderDetailController.deleteOrderDetail);
 export default router;

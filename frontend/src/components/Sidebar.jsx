@@ -52,12 +52,6 @@ export default function Sidebar({ activeTab, setActiveTab }) {
                 <FaThList className="mr-2" /> Tất cả đơn hàng
               </button>
             </Link>
-
-            <Link to="/admin/dashboard/order/pending" className="block">
-              <button className="flex items-center bg-amber-600 text-white px-4 py-2 w-full rounded-lg hover:bg-amber-700">
-                <FaThList className="mr-2" /> Đơn hàng chờ xử lý
-              </button>
-            </Link>
           </div>
         )}
         <hr className="border-gray-300 my-4" />
