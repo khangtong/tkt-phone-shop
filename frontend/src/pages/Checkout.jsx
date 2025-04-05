@@ -146,7 +146,7 @@ export default function Checkout() {
               discountAtPurchase: item.discount?.amount || 0,
             };
 
-            const res = await fetch("/api/orderDetails", {
+            const res = await fetch("/api/order-details", {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
