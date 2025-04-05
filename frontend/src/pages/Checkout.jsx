@@ -8,6 +8,7 @@ import { HiCheck, HiX } from "react-icons/hi";
 import { clearCart } from "../redux/cart/cartSlice";
 
 export default function Checkout() {
+  const { currentUser } = useSelector((state) => state.user);
   const [formData, setFormData] = useState({
     fullName: "",
     phone: "",
@@ -15,6 +16,7 @@ export default function Checkout() {
     address: "",
     paymentMethod: "COD",
   });
+  const [initialAddressLoaded, setInitialAddressLoaded] = useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const cart = useSelector((state) => state.cart);
@@ -35,6 +37,20 @@ export default function Checkout() {
       navigate("/cart");
     }
   }, [navigate, location, cart.items]);
+
+  // Load thông tin người dùng khi component mount hoặc currentUser thay đổi
+  useEffect(() => {
+    if (currentUser && !initialAddressLoaded) {
+      setFormData((prev) => ({
+        ...prev,
+        fullName: currentUser.name || "",
+        phone: currentUser.phone || "",
+        email: currentUser.email || "",
+        address: currentUser.address || "",
+      }));
+      setInitialAddressLoaded(true);
+    }
+  }, [currentUser, initialAddressLoaded]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -67,6 +83,7 @@ export default function Checkout() {
       if (!cart.items || cart.items.length === 0) {
         throw new Error("Giỏ hàng trống, không thể đặt hàng");
       }
+
       // Kiểm tra stock cho tất cả sản phẩm trong giỏ hàng
       for (const item of cart.items) {
         const variationRes = await fetch(`/api/variations/${item._id}`);
@@ -103,7 +120,7 @@ export default function Checkout() {
       const orderData = await orderResponse.json();
       const orderId = orderData._id; // Lấy ID từ phản hồi
 
-      //Sau đó tạo các order details
+      // Sau đó tạo các order details
       const orderDetailsResponses = await Promise.all(
         cart.items.map(async (item) => {
           try {
@@ -200,8 +217,11 @@ export default function Checkout() {
     } catch (error) {
       console.error("Lỗi khi gọi API thanh toán:", error);
       setToast({ type: "error", message: "Đã xảy ra lỗi, vui lòng thử lại!" });
+    } finally {
+      setIsSubmitting(false);
     }
   };
+
   return (
     <div className="max-w-4xl mx-auto p-4 md:p-8 bg-white shadow-xl rounded-xl mt-4 md:mt-12">
       {toast && (

@@ -3,77 +3,130 @@ import variationModel from "../models/variationModel.js";
 import mongoose from "mongoose";
 import orderModel from "../models/orderModel.js";
 
-// Create new order detail with stock reduction
-const createOrderDetail = async (req, res) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
+const MAX_RETRY_ATTEMPTS = 3;
+const RETRY_DELAY_MS = 100;
 
-  try {
-    const {
-      orderId,
-      productId,
-      variationId,
-      quantity,
-      priceAtPurchase,
-      discountAtPurchase,
-    } = req.body;
+// Helper function to update order total
+const updateOrderTotal = async (orderId, session = null) => {
+  const options = session ? { session } : {};
+  const orderDetails = await orderDetailModel.find({ orderId }, null, options);
 
-    // 1. Kiểm tra và cập nhật stock variation
-    const variation = await variationModel
-      .findById(variationId)
-      .session(session);
-    if (!variation) {
-      throw new Error(`Variation ${variationId} không tồn tại`);
-    }
+  const total = orderDetails.reduce(
+    (sum, detail) => sum + detail.priceAtPurchase * detail.quantity,
+    0
+  );
 
-    if (variation.stock < quantity) {
-      throw new Error(
-        `Sản phẩm không đủ hàng. Chỉ còn ${variation.stock} sản phẩm`
-      );
-    }
-
-    // Giảm stock
-    variation.stock -= quantity;
-    await variation.save({ session });
-
-    // 2. Tạo order detail
-    const newOrderDetail = await orderDetailModel.create(
-      [
-        {
-          orderId,
-          productId,
-          variationId,
-          quantity,
-          priceAtPurchase,
-          discountAtPurchase,
-        },
-      ],
-      { session }
-    );
-
-    // 3. Cập nhật tổng tiền đơn hàng
-    await updateOrderTotal(orderId, session);
-
-    await session.commitTransaction();
-    session.endSession();
-
-    res.status(201).json({
-      success: true,
-      message: "Tạo thông tin đơn hàng thành công",
-      data: newOrderDetail[0],
-    });
-  } catch (error) {
-    await session.abortTransaction();
-    session.endSession();
-
-    res.status(500).json({
-      success: false,
-      message: "Failed to create order detail",
-      error: error.message,
-    });
-  }
+  await orderModel.findByIdAndUpdate(orderId, { total }, options);
 };
 
+// Create new order detail with retry logic
+const createOrderDetail = async (req, res) => {
+  let retryCount = 0;
+
+  while (retryCount < MAX_RETRY_ATTEMPTS) {
+    const session = await mongoose.startSession();
+
+    try {
+      session.startTransaction();
+
+      const {
+        orderId,
+        productId,
+        variationId,
+        quantity,
+        priceAtPurchase,
+        discountAtPurchase = 0,
+      } = req.body;
+
+      if (quantity <= 0 || !Number.isInteger(quantity)) {
+        throw new Error("Số lượng phải là số nguyên dương");
+      }
+
+      // Check order exists
+      const orderExists = await orderModel
+        .exists({ _id: orderId })
+        .session(session);
+      if (!orderExists) {
+        throw new Error(`Đơn hàng ${orderId} không tồn tại`);
+      }
+
+      // Update stock using atomic operation
+      const updateResult = await variationModel.updateOne(
+        {
+          _id: variationId,
+          stock: { $gte: quantity },
+        },
+        { $inc: { stock: -quantity } },
+        { session }
+      );
+
+      if (updateResult.modifiedCount === 0) {
+        const variation = await variationModel
+          .findById(variationId)
+          .session(session);
+        if (!variation) {
+          throw new Error(`Phiên bản sản phẩm không tồn tại`);
+        }
+        throw new Error(`Không đủ hàng. Chỉ còn ${variation.stock} sản phẩm`);
+      }
+
+      // Create order detail
+      const newOrderDetail = await orderDetailModel.create(
+        [
+          {
+            orderId,
+            productId,
+            variationId,
+            quantity,
+            priceAtPurchase,
+            discountAtPurchase,
+          },
+        ],
+        { session }
+      );
+
+      if (!newOrderDetail?.[0]) {
+        throw new Error("Không thể tạo chi tiết đơn hàng");
+      }
+
+      // Update order total
+      await updateOrderTotal(orderId, session);
+
+      await session.commitTransaction();
+      session.endSession();
+
+      return res.status(201).json({
+        success: true,
+        message: "Tạo chi tiết đơn hàng thành công",
+        data: newOrderDetail[0],
+      });
+    } catch (error) {
+      await session.abortTransaction();
+      session.endSession();
+
+      if (
+        error.message.includes("Write conflict") &&
+        retryCount < MAX_RETRY_ATTEMPTS - 1
+      ) {
+        retryCount++;
+        await new Promise((resolve) =>
+          setTimeout(resolve, RETRY_DELAY_MS * (retryCount + 1))
+        );
+        continue;
+      }
+
+      console.error(
+        `Lỗi tạo chi tiết đơn hàng (attempt ${retryCount + 1}):`,
+        error
+      );
+      return res.status(400).json({
+        success: false,
+        message: error.message || "Lỗi khi tạo chi tiết đơn hàng",
+        retryAttempt: retryCount + 1,
+      });
+    }
+  }
+};
 // Get order details by order ID (không thay đổi)
 const getOrderDetailsByOrderId = async (req, res) => {
   try {
@@ -254,24 +307,10 @@ const deleteOrderDetail = async (req, res) => {
   }
 };
 
-// Helper function to update order total (thêm session support)
-const updateOrderTotal = async (orderId, session = null) => {
-  const options = session ? { session } : {};
-
-  const orderDetails = await orderDetailModel.find({ orderId }, null, options);
-  const total = orderDetails.reduce(
-    (sum, detail) =>
-      sum +
-      (detail.priceAtPurchase - detail.discountAtPurchase) * detail.quantity,
-    0
-  );
-
-  await orderModel.findByIdAndUpdate(orderId, { total }, options);
-};
-
 export default {
   createOrderDetail,
   getOrderDetailsByOrderId,
   updateOrderDetail,
   deleteOrderDetail,
+  updateOrderTotal,
 };

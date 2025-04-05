@@ -84,11 +84,10 @@ export default function UpdateVariation() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!selectedProduct) {
-      alert("Bạn phải chọn một sản phẩm trước khi cập nhật variation.");
+      alert("Bạn phải chọn một sản phẩm trước khi cập nhật biến thể.");
       return;
     }
-    if (!window.confirm("Bạn có chắc chắn muốn cập nhật variation này?"))
-      return;
+    if (!window.confirm("Bạn có chắc chắn muốn cập nhật biến thể này?")) return;
 
     dispatch(updateVariationStart());
 
@@ -108,7 +107,7 @@ export default function UpdateVariation() {
       if (!res.ok) throw new Error(variationData.message || "Có lỗi xảy ra");
 
       dispatch(updateVariationSuccess(variationData));
-      alert("Cập nhật variation thành công!");
+      alert("Cập nhật biến thể thành công!");
       navigate("/admin/dashboard/variation");
     } catch (error) {
       dispatch(updateVariationFailure(error.message));
@@ -121,7 +120,7 @@ export default function UpdateVariation() {
       <div className="w-4/5 p-6 flex justify-center">
         <div className="bg-white p-6 rounded-2xl shadow-lg w-full max-w-4xl">
           <h2 className="text-xl font-bold mb-4 text-center">
-            Cập Nhật Variation
+            Cập nhật biến thể{" "}
           </h2>
           {error && <p className="text-red-500 text-center mb-4">{error}</p>}
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -194,7 +193,7 @@ export default function UpdateVariation() {
               className="w-full p-3 bg-blue-500 text-white rounded-xl flex items-center justify-center"
               disabled={loading}
             >
-              {loading ? "Đang xử lý..." : "Cập Nhật Variation"}
+              {loading ? "Đang xử lý..." : "Cập nhật biến thể"}
             </button>
           </form>
         </div>

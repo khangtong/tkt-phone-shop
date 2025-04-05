@@ -326,7 +326,9 @@ export default function OrderDashboard() {
                         </td>
                         <td className="p-3">{formatCurrency(order.total)}</td>
                         <td className="p-3">{formatDate(order.orderDate)}</td>
-                        <td className="p-3">{order.delivery_address}</td>
+                        <td className="p-3">
+                          {order.delivery_address.substring(0, 10)}...
+                        </td>
                         <td className="p-3">{order.paymentMethod}</td>
                         <td className="p-3">
                           <select

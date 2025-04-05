@@ -46,6 +46,7 @@ const OrderList = () => {
           Authorization: `Bearer ${currentUser.token}`,
         },
       });
+      // console.log("Current user token:", currentUser?.token);
       if (!response.ok) throw new Error("Failed to fetch orders");
       const data = await response.json();
 
