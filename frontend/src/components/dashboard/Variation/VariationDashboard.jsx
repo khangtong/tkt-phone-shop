@@ -116,7 +116,7 @@ export default function VariationDashboard() {
             <div className="relative w-1/3">
               <input
                 type="text"
-                placeholder="Tìm kiếm variation..."
+                placeholder="Tìm kiếm biến thể..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full p-2 pl-10 border rounded-lg"

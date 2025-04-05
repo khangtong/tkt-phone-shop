@@ -1,5 +1,5 @@
 import Header from "./components/Header";
-import { Routes, Route } from "react-router-dom"; // Xóa BrowserRouter
+import { Routes, Route, useNavigate } from "react-router-dom"; // Xóa BrowserRouter
 import Home from "./pages/Home";
 import Register from "./pages/Register";
 import Login from "./pages/Login";
@@ -33,8 +33,38 @@ import PaymentSuccess from "./pages/PaymentSuccess";
 import Search from "./pages/Search";
 import OrderDetail from "./components/dashboard/Order/OrderDetail";
 import OrderDetailUS from "./pages/OrderDetailUS";
-
+import { useEffect } from "react";
+import { jwtDecode } from "jwt-decode";
+import { useDispatch, useSelector } from "react-redux";
+import { logout } from "./redux/user/userSlice";
 function App() {
+  const dispatch = useDispatch();
+  const { currentUser } = useSelector((state) => state.user);
+  const navigate = useNavigate();
+
+  // Hàm kiểm tra token hết hạn
+  const isTokenExpired = (token) => {
+    if (!token) return true;
+    try {
+      const decoded = jwtDecode(token);
+      return decoded.exp * 1000 < Date.now();
+    } catch (error) {
+      console.error("Invalid token:", error);
+      return true;
+    }
+  };
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+
+    if (!token || isTokenExpired(token)) {
+      dispatch(logout());
+      localStorage.removeItem("token");
+      alert("Phiên đăng nhập của bạn đã hết hạn, vui lòng đăng nhập lại");
+      navigate("/login");
+    }
+  }, [dispatch, navigate]);
+
   return (
     <>
       <Header />

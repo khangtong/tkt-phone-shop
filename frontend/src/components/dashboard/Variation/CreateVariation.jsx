@@ -68,10 +68,10 @@ export default function CreateVariation() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!selectedProduct) {
-      alert("Bạn phải chọn một sản phẩm trước khi thêm variation.");
+      alert("Bạn phải chọn một sản phẩm trước khi thêm biến thể.");
       return;
     }
-    if (!window.confirm("Bạn có chắc chắn muốn thêm variation này?")) return;
+    if (!window.confirm("Bạn có chắc chắn muốn thêm biến thể này?")) return;
 
     dispatch(addVariationStart());
 
@@ -95,7 +95,7 @@ export default function CreateVariation() {
       if (!res.ok) throw new Error(variationData.message || "Có lỗi xảy ra");
 
       dispatch(addVariationSuccess(variationData));
-      alert("Thêm variation thành công!");
+      alert("Thêm biến thể thành công!");
       navigate("/admin/dashboard/variation");
     } catch (error) {
       dispatch(addVariationFailure(error.message));
@@ -108,7 +108,7 @@ export default function CreateVariation() {
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
       <div className="w-4/5 p-6 flex justify-center">
         <div className="bg-white p-6 rounded-2xl shadow-lg w-full max-w-4xl">
-          <h2 className="text-xl font-bold mb-4 text-center">Thêm Variation</h2>
+          <h2 className="text-xl font-bold mb-4 text-center">Thêm biến thể</h2>
           {error && <p className="text-red-500 text-center mb-4">{error}</p>}
           <form onSubmit={handleSubmit} className="space-y-6">
             <select
@@ -188,7 +188,7 @@ export default function CreateVariation() {
               className="w-full p-3 bg-green-500 text-white rounded-xl flex items-center justify-center"
               disabled={loading}
             >
-              {loading ? "Đang xử lý..." : "Thêm Variation"}
+              {loading ? "Đang xử lý..." : "Thêm biến thể"}
             </button>
           </form>
         </div>

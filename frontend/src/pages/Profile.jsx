@@ -20,10 +20,14 @@ const Profile = () => {
     address: "",
   });
 
+  const [formErrors, setFormErrors] = useState({
+    email: "",
+    phone: "",
+  });
+
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
 
-  // Chỉ lấy các trường cần thiết cho form, không bao gồm role
   useEffect(() => {
     if (currentUser) {
       setFormData({
@@ -43,11 +47,73 @@ const Profile = () => {
   }, [showToast]);
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+
+    // Validate fields as user types
+    if (name === "email") {
+      if (!value) {
+        setFormErrors({ ...formErrors, email: "Email không được để trống" });
+      } else if (!/^[a-zA-Z0-9._%+-]+@gmail\.com$/.test(value)) {
+        setFormErrors({
+          ...formErrors,
+          email: "Email phải có đuôi @gmail.com",
+        });
+      } else {
+        setFormErrors({ ...formErrors, email: "" });
+      }
+    }
+
+    if (name === "phone") {
+      if (!value) {
+        setFormErrors({
+          ...formErrors,
+          phone: "Số điện thoại không được để trống",
+        });
+      } else if (!/^\d{10,11}$/.test(value)) {
+        setFormErrors({
+          ...formErrors,
+          phone: "Số điện thoại phải có 10-11 chữ số",
+        });
+      } else {
+        setFormErrors({ ...formErrors, phone: "" });
+      }
+    }
+  };
+
+  const validateForm = () => {
+    let isValid = true;
+    const newErrors = { ...formErrors };
+
+    if (!formData.email) {
+      newErrors.email = "Email không được để trống";
+      isValid = false;
+    } else if (!/^[a-zA-Z0-9._%+-]+@gmail\.com$/.test(formData.email)) {
+      newErrors.email = "Sai định dạng Email";
+      isValid = false;
+    }
+
+    if (!formData.phone) {
+      newErrors.phone = "Số điện thoại không được để trống";
+      isValid = false;
+    } else if (!/^\d{10,11}$/.test(formData.phone)) {
+      newErrors.phone = "Số điện thoại phải có 10-11 chữ số";
+      isValid = false;
+    }
+
+    setFormErrors(newErrors);
+    return isValid;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!validateForm()) {
+      setToastMessage("Vui lòng kiểm tra lại thông tin");
+      setShowToast(true);
+      return;
+    }
+
     dispatch(updateUserStart());
     try {
       const res = await fetch("/api/auth/update", {
@@ -56,7 +122,6 @@ const Profile = () => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
-        // Chỉ gửi các trường được phép cập nhật, không gửi role
         body: JSON.stringify({
           name: formData.name,
           email: formData.email,
@@ -68,11 +133,10 @@ const Profile = () => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Cập nhật thất bại");
 
-      // Cập nhật thông tin user nhưng giữ nguyên role
       dispatch(
         updateUserSuccess({
           ...data.user,
-          role: currentUser.role, // Giữ nguyên role hiện tại
+          role: currentUser.role,
         })
       );
 
@@ -87,7 +151,6 @@ const Profile = () => {
 
   return (
     <div className="max-w-sm mx-auto mt-10">
-      {/* Toast thông báo */}
       {showToast && (
         <div className="fixed top-0 left-1/2 -translate-x-1/2 mt-5 z-50">
           <Toast>
@@ -115,7 +178,6 @@ const Profile = () => {
       </div>
 
       <form onSubmit={handleSubmit} className="max-w-sm mx-auto space-y-4">
-        {/* Các trường form giữ nguyên */}
         <div>
           <label className="block mb-1 text-sm font-medium text-gray-700">
             Họ và tên
@@ -138,8 +200,13 @@ const Profile = () => {
             name="email"
             value={formData.email}
             onChange={handleChange}
-            className="w-full p-2 border rounded-lg"
+            className={`w-full p-2 border rounded-lg ${
+              formErrors.email ? "border-red-500" : ""
+            }`}
           />
+          {formErrors.email && (
+            <p className="mt-1 text-sm text-red-600">{formErrors.email}</p>
+          )}
         </div>
 
         <div>
@@ -151,8 +218,13 @@ const Profile = () => {
             name="phone"
             value={formData.phone}
             onChange={handleChange}
-            className="w-full p-2 border rounded-lg"
+            className={`w-full p-2 border rounded-lg ${
+              formErrors.phone ? "border-red-500" : ""
+            }`}
           />
+          {formErrors.phone && (
+            <p className="mt-1 text-sm text-red-600">{formErrors.phone}</p>
+          )}
         </div>
 
         <div>
