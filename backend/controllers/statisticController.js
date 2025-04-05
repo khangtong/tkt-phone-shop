@@ -16,7 +16,7 @@ export const getStatistics = async (req, res) => {
         status: { $eq: 'Success' },
       });
     } else if (new Date(start).getTime() > new Date(end).getTime()) {
-      return res.status(400).json({ message: 'Invalid date range' });
+      return res.status(400).json({ message: 'Khoảng thời gian không hợp lệ' });
     } else {
       orders = await Order.find({
         $and: [
@@ -36,7 +36,11 @@ export const getStatistics = async (req, res) => {
     }
 
     if (!orders || orders.length === 0) {
-      return res.status(404).json({ message: 'No orders found' });
+      return res
+        .status(404)
+        .json({
+          message: 'Không có hóa đơn để thống kê trong khoảng thời gian này',
+        });
     }
 
     const pipeline = [
