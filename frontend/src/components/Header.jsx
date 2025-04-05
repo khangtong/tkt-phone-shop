@@ -168,7 +168,10 @@ export default function Header() {
                         </Link>
                       </li>
                       <li>
-                        <Link className="block px-4 py-2 hover:bg-gray-100">
+                        <Link
+                          to="/admin/dashboard/revenue"
+                          className="block px-4 py-2 hover:bg-gray-100"
+                        >
                           Thống kê doanh thu
                         </Link>
                       </li>

@@ -12,6 +12,7 @@
   "dependencies": {
     "@reduxjs/toolkit": "^2.6.1",
     "@tailwindcss/postcss": "^4.0.11",
+    "apexcharts": "^3.46.0",
     "firebase": "^11.4.0",
     "flowbite-react": "^0.10.2",
     "jwt-decode": "^4.0.0",

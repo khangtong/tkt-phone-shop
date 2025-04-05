@@ -31,6 +31,7 @@ import DiscountProduct from './components/DiscountProduct';
 import Checkout from './pages/Checkout';
 import PaymentSuccess from './pages/PaymentSuccess';
 import Search from './pages/Search';
+import Revenue from './components/dashboard/Revenue/Revenue';
 
 function App() {
   return (
@@ -117,6 +118,7 @@ function App() {
             path="/admin/dashboard/discount/variation/add"
             element={<AddToVariation />}
           />
+          <Route path="/admin/dashboard/revenue" element={<Revenue />} />
         </Route>
       </Routes>
       <Footer />
