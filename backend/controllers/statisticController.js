@@ -1,6 +1,6 @@
-import Order from '../models/orderModel.js';
-import OrderDetail from '../models/orderDetailModel.js';
-import Category from '../models/categoryModel.js';
+import Order from "../models/orderModel.js";
+import OrderDetail from "../models/orderDetailModel.js";
+import Category from "../models/categoryModel.js";
 
 export const getStatistics = async (req, res) => {
   try {
@@ -13,10 +13,10 @@ export const getStatistics = async (req, res) => {
         orderDate: {
           $gte: new Date(start),
         },
-        status: { $eq: 'Success' },
+        status: { $eq: "Success" },
       });
     } else if (new Date(start).getTime() > new Date(end).getTime()) {
-      return res.status(400).json({ message: 'Khoảng thời gian không hợp lệ' });
+      return res.status(400).json({ message: "Khoảng thời gian không hợp lệ" });
     } else {
       orders = await Order.find({
         $and: [
@@ -31,16 +31,14 @@ export const getStatistics = async (req, res) => {
             },
           },
         ],
-        status: { $eq: 'Success' },
+        status: { $eq: "Success" },
       });
     }
 
     if (!orders || orders.length === 0) {
-      return res
-        .status(404)
-        .json({
-          message: 'Không có hóa đơn để thống kê trong khoảng thời gian này',
-        });
+      return res.status(404).json({
+        message: "Không có hóa đơn để thống kê trong khoảng thời gian này",
+      });
     }
 
     const pipeline = [
@@ -51,36 +49,36 @@ export const getStatistics = async (req, res) => {
       },
       {
         $lookup: {
-          from: 'orders',
-          localField: 'orderId',
-          foreignField: '_id',
-          as: 'order',
+          from: "orders",
+          localField: "orderId",
+          foreignField: "_id",
+          as: "order",
         },
       },
       {
         $lookup: {
-          from: 'products',
-          localField: 'productId',
-          foreignField: '_id',
+          from: "products",
+          localField: "productId",
+          foreignField: "_id",
           pipeline: [
             {
               $lookup: {
-                from: 'categories',
-                localField: 'category',
-                foreignField: '_id',
-                as: 'category',
+                from: "categories",
+                localField: "category",
+                foreignField: "_id",
+                as: "category",
               },
             },
           ],
-          as: 'product',
+          as: "product",
         },
       },
       {
         $lookup: {
-          from: 'variations',
-          localField: 'variationId',
-          foreignField: '_id',
-          as: 'variation',
+          from: "variations",
+          localField: "variationId",
+          foreignField: "_id",
+          as: "variation",
         },
       },
     ];
