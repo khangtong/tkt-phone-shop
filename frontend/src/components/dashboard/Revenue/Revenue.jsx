@@ -29,25 +29,14 @@ export default function Revenue() {
     if (document.getElementById('donut-chart'))
       document.getElementById('donut-chart').remove();
 
-    const start = e.target[0].value;
-    const end = e.target[1].value;
-
-    const startDate = new Date(
-      start.split(' ')[3],
-      +start.split(' ')[2].slice(0, -1) - 1,
-      start.split(' ')[0]
-    );
-    const endDate = new Date(
-      end.split(' ')[3],
-      +end.split(' ')[2].slice(0, -1) - 1,
-      end.split(' ')[0]
-    );
+    const start = new Date(e.target[0].value);
+    const end = new Date(e.target[1].value);
 
     async function fetchStatistic() {
       try {
         const token = localStorage.getItem('token');
         const response = await fetch(
-          `/api/statistics?start=${startDate}&end=${endDate}`,
+          `/api/statistics?start=${start}&end=${end}`,
           {
             method: 'GET',
             headers: {
@@ -192,14 +181,12 @@ export default function Revenue() {
           <div className="flex items-center gap-4 mb-4">
             <Datepicker
               title="Chọn ngày bắt đầu"
-              language="vn-VN"
               labelTodayButton="Hôm nay"
               labelClearButton="Reset"
             />
             -
             <Datepicker
               title="Chọn ngày kết thúc"
-              language="vn-VN"
               labelTodayButton="Hôm nay"
               labelClearButton="Reset"
             />
