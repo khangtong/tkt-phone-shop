@@ -74,7 +74,10 @@ export default function Checkout() {
 
 	const handleSubmit = async (e) => {
 		e.preventDefault();
-		if (!validateForm()) return;
+		if (!validateForm()) {
+			alert('Vui lòng nhập các thông tin còn thiếu!');
+			return;
+		}
 		setIsSubmitting(true);
 
 		try {
