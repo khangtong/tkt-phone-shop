@@ -102,7 +102,7 @@ export default function Checkout() {
         contactPhone: formData.phone,
         customerName: formData.fullName,
         customerEmail: formData.email,
-      };
+      };  
 
       const orderResponse = await fetch("/api/orders", {
         method: "POST",
@@ -146,14 +146,14 @@ export default function Checkout() {
               discountAtPurchase: item.discount?.amount || 0,
             };
 
-            const res = await fetch("/api/orderDetails", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${localStorage.getItem("token")}`,
-              },
-              body: JSON.stringify(payload),
-            });
+            const res = await fetch('/api/order-details', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${localStorage.getItem('token')}`,
+				},
+				body: JSON.stringify(payload),
+			});
 
             const data = await res.json();
             if (!res.ok) throw new Error(data.message || "Validation failed");

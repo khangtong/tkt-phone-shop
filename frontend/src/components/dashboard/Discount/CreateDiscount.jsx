@@ -44,7 +44,7 @@ export default function CreateDiscount() {
 			if (parsedValue < 0 || parsedValue > 100) {
 				setToast({
 					type: 'error',
-					message: 'Phần trăm giảm giá phải từ 0 đến 100!',
+					message: 'Phần trăm giảm giá phải từ 1 đến 100!',
 				});
 				return;
 			}
