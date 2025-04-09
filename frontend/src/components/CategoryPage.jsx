@@ -5,7 +5,7 @@ const CategoryPage = () => {
   const { categoryName } = useParams();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [selectedVariants, setSelectedVariants] = useState({}); // State để lưu biến thể được chọn
+  const [selectedVariants, setSelectedVariants] = useState({});
 
   useEffect(() => {
     const fetchProductsByCategory = async () => {
@@ -15,12 +15,9 @@ const CategoryPage = () => {
         if (!response.ok) throw new Error("Lỗi khi lấy sản phẩm");
         const data = await response.json();
 
-        // Lọc sản phẩm theo danh mục
         const filteredProducts = data.filter(
           (product) => product.category?.name === categoryName
         );
-
-        console.log(filteredProducts); // Log dữ liệu đã lọc
         setProducts(filteredProducts);
       } catch (error) {
         console.error(error);
@@ -58,7 +55,6 @@ const CategoryPage = () => {
     return `${rom} GB`;
   };
 
-  // Hàm xử lý khi người dùng chọn một biến thể
   const handleVariantChange = (productId, variant) => {
     setSelectedVariants((prev) => ({
       ...prev,
@@ -70,7 +66,7 @@ const CategoryPage = () => {
     <div className="min-h-screen bg-gray-100 p-3 rounded-xl">
       <main className="container mx-auto px-4 py-8">
         <div className="bg-white shadow-md p-4 rounded-lg mb-8">
-          <div className="uppercase pt-2 pl-2 text-decoration-line: underline mb-5 font-weight:800 ">
+          <div className="uppercase pt-2 pl-2 text-decoration-line: underline mb-5 font-weight:800">
             <span>{categoryName} đáng mua nhất</span>
           </div>
           <div className="container mx-auto px-4 py-4 bg-slate-100 rounded-lg">
@@ -79,17 +75,21 @@ const CategoryPage = () => {
             ) : products.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
                 {products.map((product) => {
+                  // Check if product has variations
+                  if (!product.variation || product.variation.length === 0)
+                    return null;
+
                   const selectedVariant =
-                    selectedVariants[product._id] || product.variation[0]; // Lấy biến thể được chọn hoặc biến thể đầu tiên
+                    selectedVariants[product._id] || product.variation[0];
                   const hasDiscount =
-                    selectedVariant.discount?.amount > 0 &&
-                    isDiscountActive(selectedVariant.discount);
+                    selectedVariant?.discount?.amount > 0 &&
+                    isDiscountActive(selectedVariant?.discount);
                   const discountedPrice = hasDiscount
                     ? calculateDiscountedPrice(
                         selectedVariant.price,
                         selectedVariant.discount.amount
                       )
-                    : selectedVariant.price;
+                    : selectedVariant?.price || 0;
 
                   return (
                     <div
@@ -104,15 +104,15 @@ const CategoryPage = () => {
                             JSON.stringify({
                               productId: product._id,
                               productName: product.name,
-                              productImage: product.image[0],
-                              selectedVariation: selectedVariant, // Lưu biến thể được chọn
+                              productImage: product.image?.[0] || "",
+                              selectedVariation: selectedVariant,
                             })
                           );
                         }}
                       >
                         <div className="relative w-full h-50 overflow-hidden">
                           <img
-                            src={product.image[0]}
+                            src={product.image?.[0] || ""}
                             alt={product.name}
                             className="w-full h-full object-cover"
                           />
@@ -152,7 +152,7 @@ const CategoryPage = () => {
                         </div>
                       </Link>
 
-                      {/* Dropdown để chọn biến thể */}
+                      {/* Variant selection dropdown */}
                       <div className="p-4 mt-4">
                         <select
                           onChange={(e) => {
@@ -163,6 +163,7 @@ const CategoryPage = () => {
                             handleVariantChange(product._id, selectedVariant);
                           }}
                           className="w-full p-2 border border-gray-300 rounded-lg"
+                          value={selectedVariant._id}
                         >
                           {product.variation.map((variant) => (
                             <option key={variant._id} value={variant._id}>

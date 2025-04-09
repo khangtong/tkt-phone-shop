@@ -15,6 +15,7 @@ export default function Product() {
   const [selectedRom, setSelectedRom] = useState(null);
   const [selectedPrice, setSelectedPrice] = useState(null);
   const [noProduct, setNoProduct] = useState(false);
+  const [autoSlide, setAutoSlide] = useState(true); // Thêm state để kiểm soát auto slide
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -89,6 +90,17 @@ export default function Product() {
     fetchData();
   }, [id]);
 
+  // Auto slide ảnh
+  useEffect(() => {
+    if (!product?.image || product.image.length <= 1 || !autoSlide) return;
+
+    const interval = setInterval(() => {
+      setSelectedImage((prev) => (prev + 1) % product.image.length);
+    }, 5000); //
+
+    return () => clearInterval(interval);
+  }, [product?.image, autoSlide]);
+
   // Cập nhật giá khi chọn màu & ROM
   useEffect(() => {
     if (selectedColor && selectedRom && variations.length > 0) {
@@ -131,6 +143,19 @@ export default function Product() {
 
   // Lấy danh sách màu duy nhất từ các biến thể của sản phẩm
   const uniqueColors = [...new Set(variations.map((v) => v.color) || [])];
+
+  // Hàm xử lý khi người dùng chọn ảnh thủ công
+  const handleImageSelect = (index) => {
+    setAutoSlide(false); // Tạm dừng auto slide khi người dùng chọn thủ công
+    setSelectedImage(index);
+
+    // Sau 10 giây không có tương tác thì tiếp tục auto slide
+    const timeout = setTimeout(() => {
+      setAutoSlide(true);
+    }, 10000);
+
+    return () => clearTimeout(timeout);
+  };
 
   async function handleAddToCart() {
     // Kiểm tra đăng nhập
@@ -232,7 +257,7 @@ export default function Product() {
                         ? "border-blue-500"
                         : "border-gray-300"
                     }`}
-                    onClick={() => setSelectedImage(index)}
+                    onClick={() => handleImageSelect(index)}
                   >
                     <img
                       src={img}

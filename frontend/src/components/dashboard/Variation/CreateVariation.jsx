@@ -14,12 +14,9 @@ export default function CreateVariation() {
   const { loading, error } = useSelector((state) => state.variation);
   const navigate = useNavigate();
 
-  // State activeTab
   const [activeTab, setActiveTab] = useState("variations");
-
   const [products, setProducts] = useState([]);
-  // eslint-disable-next-line no-unused-vars
-  const [discounts, setDiscounts] = useState([]); // State để lưu danh sách discount
+  const [discounts, setDiscounts] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState("");
   const [formData, setFormData] = useState({
     price: "",
@@ -27,8 +24,9 @@ export default function CreateVariation() {
     ram: "",
     rom: "",
     stock: "",
-    discount: "", // Thêm trường discount vào formData
+    discount: "",
   });
+  const [formErrors, setFormErrors] = useState({});
 
   useEffect(() => {
     async function fetchProducts() {
@@ -58,19 +56,64 @@ export default function CreateVariation() {
   }, []);
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+
+    // Clear error when user types
+    if (formErrors[name]) {
+      setFormErrors({ ...formErrors, [name]: "" });
+    }
   };
 
   const handleProductChange = (e) => {
     setSelectedProduct(e.target.value);
   };
 
+  const validateForm = () => {
+    const errors = {};
+    let isValid = true;
+
+    if (!selectedProduct) {
+      errors.product = "Bạn phải chọn một sản phẩm";
+      isValid = false;
+    }
+
+    if (!formData.color) {
+      errors.color = "Màu sắc là bắt buộc";
+      isValid = false;
+    }
+
+    if (!formData.ram || formData.ram <= 0) {
+      errors.ram = "RAM phải lớn hơn 0";
+      isValid = false;
+    }
+
+    if (!formData.rom || formData.rom <= 0) {
+      errors.rom = "ROM phải lớn hơn 0";
+      isValid = false;
+    }
+
+    if (!formData.price || formData.price <= 0) {
+      errors.price = "Giá phải lớn hơn 0";
+      isValid = false;
+    }
+
+    if (!formData.stock || formData.stock <= 0) {
+      errors.stock = "Tồn kho phải lớn hơn 0";
+      isValid = false;
+    }
+
+    setFormErrors(errors);
+    return isValid;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!selectedProduct) {
-      alert("Bạn phải chọn một sản phẩm trước khi thêm biến thể.");
+
+    if (!validateForm()) {
       return;
     }
+
     if (!window.confirm("Bạn có chắc chắn muốn thêm biến thể này?")) return;
 
     dispatch(addVariationStart());
@@ -85,7 +128,7 @@ export default function CreateVariation() {
         body: JSON.stringify({
           ...formData,
           productId: selectedProduct,
-          discount: formData.discount || null, // Gửi discount hoặc null nếu không có
+          discount: formData.discount || null,
         }),
       });
 
@@ -104,88 +147,110 @@ export default function CreateVariation() {
 
   return (
     <div className="flex h-screen bg-gray-100">
-      {/* Truyền activeTab và setActiveTab vào Sidebar */}
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
       <div className="w-4/5 p-6 flex justify-center">
         <div className="bg-white p-6 rounded-2xl shadow-lg w-full max-w-4xl">
           <h2 className="text-xl font-bold mb-4 text-center">Thêm biến thể</h2>
           {error && <p className="text-red-500 text-center mb-4">{error}</p>}
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <select
-              name="productId"
-              value={selectedProduct}
-              onChange={handleProductChange}
-              required
-              className="w-full p-3 border rounded-xl"
-            >
-              <option value="">Chọn sản phẩm</option>
-              {products.map((product) => (
-                <option key={product._id} value={product._id}>
-                  {product.name}
-                </option>
-              ))}
-            </select>
-            <input
-              type="text"
-              name="color"
-              placeholder="Màu sắc"
-              value={formData.color}
-              onChange={handleChange}
-              required
-              className="w-full p-3 border rounded-xl"
-            />
-            <input
-              type="number"
-              name="ram"
-              placeholder="RAM (GB)"
-              value={formData.ram}
-              onChange={handleChange}
-              required
-              className="w-full p-3 border rounded-xl"
-            />
-            <input
-              type="number"
-              name="rom"
-              placeholder="ROM (GB)"
-              value={formData.rom}
-              onChange={handleChange}
-              required
-              className="w-full p-3 border rounded-xl"
-            />
-            <input
-              type="number"
-              name="price"
-              placeholder="Giá"
-              value={formData.price}
-              onChange={handleChange}
-              required
-              className="w-full p-3 border rounded-xl"
-            />
-            <input
-              type="number"
-              name="stock"
-              placeholder="Tồn kho"
-              value={formData.stock}
-              onChange={handleChange}
-              required
-              className="w-full p-3 border rounded-xl"
-            />
-            {/* <select
-              name="discount"
-              value={formData.discount}
-              onChange={handleChange}
-              className="w-full p-3 border rounded-xl"
-            >
-              <option value="">Chọn mã giảm giá (nếu có)</option>
-              {discounts.map((discount) => (
-                <option key={discount._id} value={discount._id}>
-                  {discount.name} - {discount.percentage}%
-                </option>
-              ))}
-            </select> */}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <select
+                name="productId"
+                value={selectedProduct}
+                onChange={handleProductChange}
+                className="w-full p-3 border rounded-xl"
+              >
+                <option value="">Chọn sản phẩm</option>
+                {products.map((product) => (
+                  <option key={product._id} value={product._id}>
+                    {product.name}
+                  </option>
+                ))}
+              </select>
+              {formErrors.product && (
+                <p className="text-red-500 text-sm mt-1">
+                  {formErrors.product}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <input
+                type="text"
+                name="color"
+                placeholder="Màu sắc"
+                value={formData.color}
+                onChange={handleChange}
+                className="w-full p-3 border rounded-xl"
+              />
+              {formErrors.color && (
+                <p className="text-red-500 text-sm mt-1">{formErrors.color}</p>
+              )}
+            </div>
+
+            <div>
+              <input
+                type="number"
+                name="ram"
+                placeholder="RAM (GB)"
+                min="1"
+                value={formData.ram}
+                onChange={handleChange}
+                className="w-full p-3 border rounded-xl"
+              />
+              {formErrors.ram && (
+                <p className="text-red-500 text-sm mt-1">{formErrors.ram}</p>
+              )}
+            </div>
+
+            <div>
+              <input
+                type="number"
+                name="rom"
+                placeholder="ROM (GB)"
+                min="1"
+                value={formData.rom}
+                onChange={handleChange}
+                className="w-full p-3 border rounded-xl"
+              />
+              {formErrors.rom && (
+                <p className="text-red-500 text-sm mt-1">{formErrors.rom}</p>
+              )}
+            </div>
+
+            <div>
+              <input
+                type="number"
+                name="price"
+                placeholder="Giá"
+                min="1"
+                value={formData.price}
+                onChange={handleChange}
+                className="w-full p-3 border rounded-xl"
+              />
+              {formErrors.price && (
+                <p className="text-red-500 text-sm mt-1">{formErrors.price}</p>
+              )}
+            </div>
+
+            <div>
+              <input
+                type="number"
+                name="stock"
+                placeholder="Tồn kho"
+                min="1"
+                value={formData.stock}
+                onChange={handleChange}
+                className="w-full p-3 border rounded-xl"
+              />
+              {formErrors.stock && (
+                <p className="text-red-500 text-sm mt-1">{formErrors.stock}</p>
+              )}
+            </div>
+
             <button
               type="submit"
-              className="w-full p-3 bg-green-500 text-white rounded-xl flex items-center justify-center"
+              className="w-full p-3 bg-green-500 text-white rounded-xl flex items-center justify-center hover:bg-green-600 transition-colors"
               disabled={loading}
             >
               {loading ? "Đang xử lý..." : "Thêm biến thể"}
