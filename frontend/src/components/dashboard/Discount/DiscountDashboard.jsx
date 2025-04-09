@@ -174,7 +174,10 @@ export default function DiscountDashboard() {
 													{formatDateFromISO(discount.startDate)}
 												</td>
 												<td className='p-3'>
-													{formatDateFromISO(discount.endDate)}
+													{new Date(discount.endDate).getTime() <
+													Date.now()
+														? 'Đã hết hạn'
+														: formatDateFromISO(discount.endDate)}
 												</td>
 												<td className='p-3 flex space-x-2'>
 													<Link
