@@ -4,9 +4,11 @@ import Sidebar from '../../Sidebar';
 import { FaEdit, FaSearch, FaTrash } from 'react-icons/fa';
 import { IoAddOutline } from 'react-icons/io5';
 import { useSelector } from 'react-redux';
+import CustomModalConfirm from '../../CustomModal';
 
 export default function CategoryDashboard() {
 	const [activeTab, setActiveTab] = useState('categories');
+	const [openModal, setOpenModal] = useState(false);
 	const [searchTerm, setSearchTerm] = useState('');
 	const [categories, setCategories] = useState([]);
 	const [filteredCategories, setFilteredCategories] = useState([]);
@@ -15,6 +17,7 @@ export default function CategoryDashboard() {
 	const [toast, setToast] = useState(null);
 	const [currentPage, setCurrentPage] = useState(1);
 	const itemsPerPage = 8;
+	const [categoryID, setCategoryID] = useState('');
 
 	const fetchCategories = async () => {
 		setLoading(true);
@@ -32,6 +35,7 @@ export default function CategoryDashboard() {
 	};
 
 	const handleDeleteCategory = async (categoryID) => {
+		setOpenModal(false);
 		try {
 			const res = await fetch(`/api/categories/${categoryID}`, {
 				method: 'DELETE',
@@ -91,7 +95,7 @@ export default function CategoryDashboard() {
 				<div className='bg-white p-6 rounded-xl shadow-lg'>
 					{toast && (
 						<div
-							className={`fixed top-5 right-5 p-4 rounded-lg shadow-lg text-white ${
+							className={`fixed top-5 z-[1001] right-5 p-4 rounded-lg shadow-lg text-white ${
 								toast.type === 'success' ? 'bg-green-500' : 'bg-red-500'
 							}`}>
 							{toast.message}
@@ -154,9 +158,10 @@ export default function CategoryDashboard() {
 													</Link>
 													<button
 														className='bg-red-500 p-2 text-white rounded-lg'
-														onClick={() =>
-															handleDeleteCategory(category._id)
-														}>
+														onClick={() => {
+															setOpenModal(true);
+															setCategoryID(category._id);
+														}}>
 														<FaTrash />
 													</button>
 												</td>
@@ -189,6 +194,15 @@ export default function CategoryDashboard() {
 								</td>
 							</tr>
 						)}
+
+						<CustomModalConfirm
+							openModal={openModal}
+							onClose={() => setOpenModal(false)}
+							textConfirm={
+								'Bạn chắc chắc muốn xoá danh mục này? Nếu xoá danh mục sẽ xoá tất cả sản phẩm thuộc danh mục này!'
+							}
+							performAction={() => handleDeleteCategory(categoryID)}
+						/>
 					</div>
 				</div>
 			</div>
