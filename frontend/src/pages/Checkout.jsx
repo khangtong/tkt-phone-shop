@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Label, Radio, Toast } from 'flowbite-react';
+import { Label, Radio, Toast, Modal } from 'flowbite-react';
 import vnpay_icon from '../assets/icon/vnpay.jpg';
 import cod_icon from '../assets/icon/cod.png';
-import { HiCheck, HiX } from 'react-icons/hi';
+import { HiCheck, HiX, HiExclamation } from 'react-icons/hi';
 import { clearCart } from '../redux/cart/cartSlice';
 
 export default function Checkout() {
@@ -23,6 +23,7 @@ export default function Checkout() {
 	const [errors, setErrors] = useState({});
 	const [toast, setToast] = useState(null);
 	const [isSubmitting, setIsSubmitting] = useState(false);
+	const [showConfirmation, setShowConfirmation] = useState(false);
 	const location = useLocation();
 
 	useEffect(() => {
@@ -38,7 +39,6 @@ export default function Checkout() {
 		}
 	}, [navigate, location, cart.items]);
 
-	// Load thông tin người dùng khi component mount hoặc currentUser thay đổi
 	useEffect(() => {
 		if (currentUser && !initialAddressLoaded) {
 			setFormData((prev) => ({
@@ -72,12 +72,17 @@ export default function Checkout() {
 		return Object.keys(newErrors).length === 0;
 	};
 
-	const handleSubmit = async (e) => {
+	const handleSubmit = (e) => {
 		e.preventDefault();
 		if (!validateForm()) {
-			alert('Vui lòng nhập các thông tin còn thiếu!');
+			alert('Vui lòng nhập đầy đủ thông tin!');
 			return;
 		}
+		setShowConfirmation(true);
+	};
+
+	const confirmOrder = async () => {
+		setShowConfirmation(false);
 		setIsSubmitting(true);
 
 		try {
@@ -119,7 +124,7 @@ export default function Checkout() {
 			}
 
 			const orderData = await orderResponse.json();
-			const orderId = orderData._id; // Lấy ID từ phản hồi
+			const orderId = orderData._id;
 
 			// Sau đó tạo các order details
 			const orderDetailsResponses = await Promise.all(
@@ -133,7 +138,7 @@ export default function Checkout() {
 						}
 
 						const payload = {
-							orderId, // Sử dụng orderId vừa tạo
+							orderId,
 							productId: item.product._id,
 							variationId: variationData._id,
 							quantity: item.quantity,
@@ -166,7 +171,6 @@ export default function Checkout() {
 
 			// Xử lý thanh toán nếu cần
 			if (formData.paymentMethod === 'VNPAY') {
-				// Gọi API thanh toán VNPay
 				const res = await fetch('/api/payment/vnpay-payment', {
 					method: 'POST',
 					headers: {
@@ -183,13 +187,12 @@ export default function Checkout() {
 						message: 'Đang chuyển hướng đến VNPay...',
 					});
 					setTimeout(() => {
-						window.location.href = data.vnpayUrl; // Chuyển hướng đến VNPay sau 2s
+						window.location.href = data.vnpayUrl;
 					}, 2000);
 				} else {
 					setToast({ type: 'error', message: data.message });
 				}
 			} else if (formData.paymentMethod === 'COD') {
-				// Gọi API thanh toán COD
 				const res = await fetch('/api/payment/cod-payment', {
 					method: 'POST',
 					headers: {
@@ -199,7 +202,6 @@ export default function Checkout() {
 				});
 
 				const data = await res.json();
-				console.log(data);
 
 				if (data.success) {
 					setToast({
@@ -207,7 +209,7 @@ export default function Checkout() {
 						message: 'Thanh toán thành công! Đang chuyển trang...',
 					});
 					setTimeout(() => {
-						navigate(`/payment-success/${data.paymentId}`); // Chuyển hướng sau 3s
+						navigate(`/payment-success/${data.paymentId}`);
 					}, 3000);
 				} else {
 					setToast({ type: 'error', message: data.message });
@@ -243,6 +245,37 @@ export default function Checkout() {
 					</Toast>
 				</div>
 			)}
+
+			{/* Modal xác nhận */}
+			<Modal
+				show={showConfirmation}
+				size='md'
+				popup
+				onClose={() => setShowConfirmation(false)}>
+				<Modal.Header />
+				<Modal.Body>
+					<div className='text-center'>
+						<HiExclamation className='mx-auto mb-4 h-14 w-14 text-gray-400 dark:text-gray-200' />
+						<h3 className='mb-5 text-lg font-normal text-gray-500 dark:text-gray-400'>
+							Bạn có chắc chắn muốn đặt hàng?
+						</h3>
+						<div className='flex justify-center gap-4'>
+							<button
+								color='failure'
+								className='bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded-lg'
+								onClick={confirmOrder}>
+								Xác nhận
+							</button>
+							<button
+								color='gray'
+								className='bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg'
+								onClick={() => setShowConfirmation(false)}>
+								Hủy bỏ
+							</button>
+						</div>
+					</div>
+				</Modal.Body>
+			</Modal>
 
 			<h1 className='text-2xl md:text-3xl font-bold text-center text-gray-900 mb-6'>
 				Thông Tin Đặt Hàng
