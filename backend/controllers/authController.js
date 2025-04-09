@@ -1,13 +1,14 @@
-import User from "../models/userModel.js";
-import jwt from "jsonwebtoken";
-import bcrypt from "bcrypt";
-import generateOTP from "../utils/generateOTP.js";
-import forgotPasswordTemplate from "../utils/forgotPasswordTemplate.js";
-import sendEmail from "../configs/sendEmail.js";
+import User from '../models/userModel.js';
+import jwt from 'jsonwebtoken';
+import bcrypt from 'bcrypt';
+import generateOTP from '../utils/generateOTP.js';
+import forgotPasswordTemplate from '../utils/forgotPasswordTemplate.js';
+import sendEmail from '../configs/sendEmail.js';
+import Cart from '../models/cartModel.js';
 
 // Generate JWT Token
 const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "7d" });
+  return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '7d' });
 };
 
 export const registerUser = async (req, res) => {
@@ -17,7 +18,7 @@ export const registerUser = async (req, res) => {
     // Check if user already exists
     const userExists = await User.findOne({ email });
     if (userExists) {
-      return res.status(400).json({ message: "User already exists" });
+      return res.status(400).json({ message: 'User already exists' });
     }
 
     // Create new user
@@ -32,10 +33,16 @@ export const registerUser = async (req, res) => {
     // Generate token
     const token = generateToken(newUser._id);
 
+    // Create cart for the new user
+    const newCart = await Cart.create({ userId: newUser._id });
+    if (!newCart) {
+      return res.status(500).json({ message: 'Failed to create cart' });
+    }
+
     // Send response
     res.status(201).json({
       success: true,
-      message: "User registered successfully",
+      message: 'User registered successfully',
       user: {
         _id: newUser._id,
         name: newUser.name,
@@ -47,7 +54,7 @@ export const registerUser = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: "Server error",
+      message: 'Server error',
       error: error.message,
     });
   }
@@ -60,13 +67,13 @@ export const loginUser = async (req, res) => {
     // Find user by email
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(401).json({ message: "Invalid email or password" });
+      return res.status(401).json({ message: 'Invalid email or password' });
     }
 
     // Check password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(401).json({ message: "Invalid email or password" });
+      return res.status(401).json({ message: 'Invalid email or password' });
     }
 
     // Generate token
@@ -74,7 +81,7 @@ export const loginUser = async (req, res) => {
 
     // Send response
     res.json({
-      message: "Login successful",
+      message: 'Login successful',
       user: {
         _id: user._id,
         name: user.name,
@@ -86,7 +93,7 @@ export const loginUser = async (req, res) => {
       },
     });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
 
@@ -96,23 +103,23 @@ export const logoutUser = async (req, res) => {
     const user = await User.findById(req.user._id);
 
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(404).json({ message: 'User not found' });
     }
 
     // Xóa refresh token trong database
-    user.refresh_token = "";
+    user.refresh_token = '';
     await user.save();
 
     // Xóa cookie (nếu bạn đang sử dụng refresh token trong cookie)
-    res.clearCookie("refreshToken", {
+    res.clearCookie('refreshToken', {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
     });
 
-    res.status(200).json({ message: "Logged out successfully" });
+    res.status(200).json({ message: 'Logged out successfully' });
   } catch (error) {
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 export const updateUser = async (req, res) => {
@@ -123,14 +130,14 @@ export const updateUser = async (req, res) => {
     // Tìm người dùng hiện tại
     const user = await User.findById(userId);
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(404).json({ message: 'User not found' });
     }
 
     // Kiểm tra nếu email đã tồn tại trong hệ thống (trừ chính user hiện tại)
     if (email && email !== user.email) {
       const emailExists = await User.findOne({ email });
       if (emailExists) {
-        return res.status(400).json({ message: "Email đã tồn tại" });
+        return res.status(400).json({ message: 'Email đã tồn tại' });
       }
       user.email = email;
     }
@@ -151,7 +158,7 @@ export const updateUser = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: "User updated successfully",
+      message: 'User updated successfully',
       user: {
         _id: user._id,
         name: user.name,
@@ -163,7 +170,7 @@ export const updateUser = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: "Server error",
+      message: 'Server error',
       error: error.message,
     });
   }
@@ -177,7 +184,7 @@ export const forgotPassword = async (req, res) => {
 
     if (!user) {
       return res.status(404).json({
-        message: "Vui lòng kiểm tra lại email",
+        message: 'Vui lòng kiểm tra lại email',
       });
     }
 
@@ -195,19 +202,19 @@ export const forgotPassword = async (req, res) => {
 
     const data = {
       to: email,
-      subject: "TKT-Phone-Shop Verification Code",
-      text: "Hey user",
+      subject: 'TKT-Phone-Shop Verification Code',
+      text: 'Hey user',
       html: forgotPasswordTemplate({ name: user.name, otpCode: otp }),
     };
 
     await sendEmail(data);
 
     return res.status(200).json({
-      message: "Kiểm tra email của bạn để đặt lại mật khẩu",
+      message: 'Kiểm tra email của bạn để đặt lại mật khẩu',
     });
   } catch (error) {
     return res.status(500).json({
-      message: "Server error",
+      message: 'Server error',
       error: error.message,
     });
   }
@@ -221,40 +228,40 @@ export const verifyOTP = async (req, res) => {
 
     if (!email || !otp) {
       return res.status(400).json({
-        message: "Provided email and otp code",
+        message: 'Provided email and otp code',
       });
     }
 
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(400).json({
-        message: "Vui lòng kiểm tra lại email",
+        message: 'Vui lòng kiểm tra lại email',
       });
     }
 
     if (!user.passwordResetOTP || user.passwordResetOTP !== otp) {
       return res.status(400).json({
-        message: "Mã xác nhận không hợp lệ hoặc đã hết hạn",
+        message: 'Mã xác nhận không hợp lệ hoặc đã hết hạn',
       });
     }
 
     if (!user.passwordResetExpires || user.passwordResetExpires < currentTime) {
       return res.status(400).json({
-        message: "Mã xác nhận không hợp lệ hoặc đã hết hạn",
+        message: 'Mã xác nhận không hợp lệ hoặc đã hết hạn',
       });
     }
 
     const update = await User.findByIdAndUpdate(user._id, {
-      passwordResetOTP: "",
+      passwordResetOTP: '',
       passwordResetExpires: null,
     });
 
     return res.status(200).json({
-      message: "Xác thực thành công",
+      message: 'Xác thực thành công',
     });
   } catch (error) {
     return res.status(500).json({
-      message: "Server error",
+      message: 'Server error',
       error: error.message,
     });
   }
@@ -268,20 +275,20 @@ export const resetPassword = async (req, res) => {
     if (!email || !newPassword || !confirmPassword) {
       return res.status(400).json({
         message:
-          "Provided required fields email, newPassword and confirmPassword",
+          'Provided required fields email, newPassword and confirmPassword',
       });
     }
 
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(400).json({
-        message: "User not found",
+        message: 'User not found',
       });
     }
 
     if (newPassword !== confirmPassword) {
       return res.status(400).json({
-        message: "Mật khẩu mới và xác nhận mật khẩu không khớp",
+        message: 'Mật khẩu mới và xác nhận mật khẩu không khớp',
       });
     }
 
@@ -297,11 +304,11 @@ export const resetPassword = async (req, res) => {
     );
 
     return res.status(200).json({
-      message: "Đặt lại mật khẩu thành công",
+      message: 'Đặt lại mật khẩu thành công',
     });
   } catch (error) {
     return res.status(500).json({
-      message: "Server error",
+      message: 'Server error',
       error: error.message,
     });
   }
