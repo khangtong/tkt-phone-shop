@@ -40,128 +40,98 @@ import { logout } from './redux/user/userSlice';
 import Revenue from './components/dashboard/Revenue/Revenue';
 
 function App() {
-  const dispatch = useDispatch();
-  const { currentUser } = useSelector((state) => state.user);
-  const navigate = useNavigate();
+	// const dispatch = useDispatch();
+	// const { currentUser } = useSelector((state) => state.user);
+	// const navigate = useNavigate();
 
-  // Hàm kiểm tra token hết hạn
-  const isTokenExpired = (token) => {
-    if (!token) return true;
-    try {
-      const decoded = jwtDecode(token);
-      return decoded.exp * 1000 < Date.now();
-    } catch (error) {
-      console.error('Invalid token:', error);
-      return true;
-    }
-  };
+	// // Hàm kiểm tra token hết hạn
+	// const isTokenExpired = (token) => {
+	//   if (!token) return true;
+	//   try {
+	//     const decoded = jwtDecode(token);
+	//     return decoded.exp * 1000 < Date.now();
+	//   } catch (error) {
+	//     console.error('Invalid token:', error);
+	//     return true;
+	//   }
+	// };
 
-  useEffect(() => {
-    const token = localStorage.getItem('token');
+	// useEffect(() => {
+	//   const token = localStorage.getItem('token');
 
-    if (!token || isTokenExpired(token)) {
-      dispatch(logout());
-      localStorage.removeItem('token');
-      alert('Phiên đăng nhập của bạn đã hết hạn, vui lòng đăng nhập lại');
-      navigate('/login');
-    }
-  }, [dispatch, navigate]);
+	//   if (!token || isTokenExpired(token)) {
+	//     dispatch(logout());
+	//     localStorage.removeItem('token');
+	//     alert('Phiên đăng nhập của bạn đã hết hạn, vui lòng đăng nhập lại');
+	//     navigate('/login');
+	//   }
+	// }, [dispatch, navigate]);
 
-  return (
-    <>
-      <Header />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/product/:id" element={<Product />} />
-        <Route path="/product/discount" element={<DiscountProduct />} />
+	return (
+		<>
+			<Header />
+			<Routes>
+				<Route path='/' element={<Home />} />
+				<Route path='/register' element={<Register />} />
+				<Route path='/login' element={<Login />} />
+				<Route path='/forgot-password' element={<ForgotPassword />} />
+				<Route path='/reset-password' element={<ResetPassword />} />
+				<Route path='/product/:id' element={<Product />} />
+				<Route path='/product/discount' element={<DiscountProduct />} />
 
-        <Route path="/category/:categoryName" element={<CategoryPage />} />
-        <Route path="/checkout" element={<Checkout />} />
-        <Route
-          path="/payment-success/:paymentId"
-          element={<PaymentSuccess />}
-        />
-        <Route path="/search" element={<Search />} />
-        <Route element={<UserRoute />}>
-          <Route path="/profile/order" element={<Order />} />
-          <Route path="/profile/order/:id" element={<OrderDetailUS />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/cart" element={<Cart />} />
-        </Route>
+				<Route path='/category/:categoryName' element={<CategoryPage />} />
+				<Route path='/checkout' element={<Checkout />} />
+				<Route path='/payment-success/:paymentId' element={<PaymentSuccess />} />
+				<Route path='/search' element={<Search />} />
+				<Route element={<UserRoute />}>
+					<Route path='/profile/order' element={<Order />} />
+					<Route path='/profile/order/:id' element={<OrderDetailUS />} />
+					<Route path='/profile' element={<Profile />} />
+					<Route path='/cart' element={<Cart />} />
+				</Route>
 
-        <Route element={<AdminRoute />}>
-          <Route
-            path="/admin/dashboard/product"
-            element={<ProductDashboard />}
-          />
-          <Route path="/admin/dashboard/order" element={<Orderdashboard />} />
-          <Route
-            path="/admin/dashboard/order/orderdetail/:id"
-            element={<OrderDetail />}
-          />
+				<Route element={<AdminRoute />}>
+					<Route path='/admin/dashboard/product' element={<ProductDashboard />} />
+					<Route path='/admin/dashboard/order' element={<Orderdashboard />} />
+					<Route
+						path='/admin/dashboard/order/orderdetail/:id'
+						element={<OrderDetail />}
+					/>
 
-          <Route
-            path="/admin/dashboard/product/add"
-            element={<CreateProduct />}
-          />
-          <Route
-            path="/admin/dashboard/product/update/:id"
-            element={<UpdateProduct />}
-          />
-          <Route
-            path="/admin/dashboard/category"
-            element={<CategoryDashboard />}
-          />
-          <Route
-            path="/admin/dashboard/category/add"
-            element={<CreateCategory />}
-          />
-          <Route
-            path="/admin/dashboard/category/update/:id"
-            element={<UpdateCategory />}
-          />
-          <Route
-            path="/admin/dashboard/variation/"
-            element={<VariationDashboard />}
-          />
-          <Route
-            path="/admin/dashboard/variation/add"
-            element={<CreateVariation />}
-          />
-          <Route
-            path="/admin/dashboard/variation/update/:id"
-            element={<UpdateVariation />}
-          />
-          <Route
-            path="/admin/dashboard/discount"
-            element={<DiscountDashboard />}
-          />
-          <Route
-            path="/admin/dashboard/discount/add"
-            element={<CreateDiscount />}
-          />
-          <Route
-            path="/admin/dashboard/discount/update/:id"
-            element={<UpdateDiscount />}
-          />
-          <Route
-            path="/admin/dashboard/discount/variation"
-            element={<AddToVariationDashboard />}
-          />
-          <Route
-            path="/admin/dashboard/discount/variation/add"
-            element={<AddToVariation />}
-          />
-          <Route path="/admin/dashboard/revenue" element={<Revenue />} />
-        </Route>
-      </Routes>
-      <Footer />
-    </>
-  );
+					<Route path='/admin/dashboard/product/add' element={<CreateProduct />} />
+					<Route path='/admin/dashboard/product/update/:id' element={<UpdateProduct />} />
+					<Route path='/admin/dashboard/category' element={<CategoryDashboard />} />
+					<Route path='/admin/dashboard/category/add' element={<CreateCategory />} />
+					<Route
+						path='/admin/dashboard/category/update/:id'
+						element={<UpdateCategory />}
+					/>
+					<Route path='/admin/dashboard/variation/' element={<VariationDashboard />} />
+					<Route path='/admin/dashboard/variation/add' element={<CreateVariation />} />
+					<Route
+						path='/admin/dashboard/variation/update/:id'
+						element={<UpdateVariation />}
+					/>
+					<Route path='/admin/dashboard/discount' element={<DiscountDashboard />} />
+					<Route path='/admin/dashboard/discount/add' element={<CreateDiscount />} />
+					<Route
+						path='/admin/dashboard/discount/update/:id'
+						element={<UpdateDiscount />}
+					/>
+					<Route
+						path='/admin/dashboard/discount/variation'
+						element={<AddToVariationDashboard />}
+					/>
+					<Route
+						path='/admin/dashboard/discount/variation/add'
+						element={<AddToVariation />}
+					/>
+					<Route path='/admin/dashboard/revenue' element={<Revenue />} />
+				</Route>
+			</Routes>
+			<Footer />
+		</>
+	);
 }
 
 export default App;

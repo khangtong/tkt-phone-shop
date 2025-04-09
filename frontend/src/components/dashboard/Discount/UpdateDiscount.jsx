@@ -57,10 +57,21 @@ export default function UpdateDiscount() {
 	}, [id]);
 
 	const handleChange = (e) => {
-		setFormData({
-			...formData,
-			[e.target.name]: e.target.value,
-		});
+		const { name, value } = e.target;
+
+		// Kiểm tra amount không được âm và không quá 100
+		if (name === 'amount') {
+			const parsedValue = parseFloat(value);
+			if (parsedValue < 0 || parsedValue > 100) {
+				setToast({
+					type: 'error',
+					message: 'Phần trăm giảm giá phải từ 1 đến 100!',
+				});
+				return;
+			}
+		}
+
+		setFormData({ ...formData, [name]: value });
 	};
 
 	const handleSubmit = async (e) => {
