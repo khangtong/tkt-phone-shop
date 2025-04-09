@@ -1,4 +1,6 @@
 import Category from '../models/categoryModel.js';
+import Product from '../models/productModel.js';
+import Variation from '../models/variationModel.js';
 
 export const createCategory = async (req, res) => {
   try {
@@ -57,6 +59,15 @@ export const deleteCategory = async (req, res) => {
 
     if (!category)
       return res.status(404).json({ message: 'Category not found' });
+
+    // Delete all products associated with this category
+    const products = await Product.find({ category: categoryId });
+
+    for (const product of products) {
+      await Variation.deleteMany({ product: product._id });
+    }
+
+    await Product.deleteMany({ category: categoryId });
 
     res.json({ message: 'Category deleted successfully' });
   } catch (error) {
